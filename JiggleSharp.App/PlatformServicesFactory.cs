@@ -1,5 +1,6 @@
 using JiggleSharp.Core.Engine;
 using JiggleSharp.Linux;
+using JiggleSharp.Mac;
 
 namespace JiggleSharp.App;
 
@@ -13,8 +14,8 @@ public static class PlatformServicesFactory
         //if (OperatingSystem.IsWindows())
         //    return new WindowsPlatformServices();
 
-        //if (OperatingSystem.IsMacOS())
-        //    return new MacPlatformServices();
+        if (OperatingSystem.IsMacOS())
+            return new MacPlatformServices();
 
         throw new PlatformNotSupportedException();
     }

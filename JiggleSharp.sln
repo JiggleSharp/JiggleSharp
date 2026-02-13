@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JiggleSharp.Linux", "Jiggle
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JiggleSharp.App", "JiggleSharp.App\JiggleSharp.App.csproj", "{CE0AB6E2-B2D7-4172-8A97-97570C0A2725}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JiggleSharp.Mac", "JiggleSharp.Mac\JiggleSharp.Mac.csproj", "{BE16F8C2-623D-42DD-9FDB-E74A2148563E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{CE0AB6E2-B2D7-4172-8A97-97570C0A2725}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE0AB6E2-B2D7-4172-8A97-97570C0A2725}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE0AB6E2-B2D7-4172-8A97-97570C0A2725}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BE16F8C2-623D-42DD-9FDB-E74A2148563E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BE16F8C2-623D-42DD-9FDB-E74A2148563E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BE16F8C2-623D-42DD-9FDB-E74A2148563E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BE16F8C2-623D-42DD-9FDB-E74A2148563E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
