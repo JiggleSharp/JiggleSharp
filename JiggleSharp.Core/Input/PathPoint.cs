@@ -1,6 +1,3 @@
 namespace JiggleSharp.Core.Input;
 
-public class PathPoint
-{
-    
-}
+public readonly record struct PathPoint(int Dx, int Dy, int DelayUs);

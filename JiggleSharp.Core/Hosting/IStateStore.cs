@@ -1,4 +1,4 @@
-namespace JiggleSharp.Core.Engine;
+namespace JiggleSharp.Core.Hosting;
 
 /// <summary>
 /// Provides an interface for platform handlers to accept updates to JiggleSharp's state

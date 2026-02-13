@@ -1,4 +1,4 @@
-namespace JiggleSharp.Core.Engine;
+namespace JiggleSharp.Core.Hosting;
 
 /// <summary>
 /// Provides an interface for a platform to accept JiggleSharp's logging information

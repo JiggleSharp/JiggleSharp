@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace JiggleSharp.Linux;
 
-internal static class YtooldProxy
+internal static class SystemctlProxy
 {
     /// <summary>
     /// Verifies that ydotoold service is running and the user is able to access it

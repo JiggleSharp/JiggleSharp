@@ -1,6 +1,6 @@
 namespace JiggleSharp.Core.Input;
 
-public class IPathGenerator
+public interface IPathGenerator
 {
-    
+    IReadOnlyList<PathPoint> GeneratePath(double targetX, double targetY, Random rng, Engine.JiggleOptions options);
 }
