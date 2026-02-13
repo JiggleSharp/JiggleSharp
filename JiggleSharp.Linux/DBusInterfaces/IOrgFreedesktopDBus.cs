@@ -1,6 +1,9 @@
-namespace JiggleSharp.Linux.DbusInterfaces;
+using Tmds.DBus;
 
-public interface IOrgFreedesktopDBus
+namespace JiggleSharp.Linux.DBusInterfaces;
+
+[DBusInterface("org.freedesktop.DBus")]
+public interface IOrgFreedesktopDBus : IDBusObject
 {
-    
+    Task<bool> NameHasOwnerAsync(string name);
 }
