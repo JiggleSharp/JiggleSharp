@@ -9,4 +9,5 @@ public interface IPlatformServices
     IIdleTimeProvider IdleTimeProvider { get; }
     IInputInjector InputInjector { get; }
     IEnvironmentValidator EnvironmentValidator { get; }
+    ISystemIntegrationHandler SystemIntegrationHandler { get; }
 }
