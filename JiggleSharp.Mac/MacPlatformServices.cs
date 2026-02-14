@@ -9,7 +9,7 @@ namespace JiggleSharp.Mac;
 
 public class MacPlatformServices : IPlatformServices
 {
-    public IIdleTimeProvider IdleTimeProvider => new MacIdleTimeProvider();
-    public IInputInjector InputInjector => new MacInputInjector();
-    public IEnvironmentValidator EnvironmentValidator => new MacEnvironmentValidator();
+    public IIdleTimeProvider IdleTimeProvider { get; } = new MacIdleTimeProvider();
+    public IInputInjector InputInjector { get; } = new MacInputInjector();
+    public IEnvironmentValidator EnvironmentValidator { get; } = new MacEnvironmentValidator();
 }

@@ -5,16 +5,61 @@ namespace JiggleSharp.Mac.Idle;
 
 public class MacIdleTimeProvider : IIdleTimeProvider
 {
+    private CancellationTokenSource? _cts;
+    private Task? _loop;
+    
     public Task<TimeSpan> GetIdleTimeAsync(CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var idleNs = GetHidIdleTimeNanoseconds();
-        return Task.FromResult(TimeSpan.FromSeconds(idleNs / 1_000_000_000.0));
+        var newIdleTime = TimeSpan.FromSeconds(idleNs / 1_000_000_000.0);
+        
+        IdleTimeChanged?.Invoke(this, new IdleTimeChangedEventArgs(newIdleTime));
+        
+        return Task.FromResult(newIdleTime);
     }
 
     public Task<bool> IsAvailableAsync(CancellationToken ct = default)
     {
         throw new NotImplementedException();
+    }
+
+    public event EventHandler<IdleTimeChangedEventArgs>? IdleTimeChanged;
+    public void Start()
+    {
+        if (_loop != null) return;
+
+        _cts = new CancellationTokenSource();
+        _loop = Task.Run(() => LoopAsync(_cts.Token));
+    }
+
+    public async Task StopAsync()
+    {
+        if (_cts == null) return;
+
+        await _cts.CancelAsync();
+        try
+        {
+            if (_loop != null) 
+                await _loop;
+        }
+        catch (OperationCanceledException) { }
+        finally
+        {
+            _loop = null;
+            _cts.Dispose();
+            _cts = null;
+        }
+    }
+
+    private async Task LoopAsync(CancellationToken ct = default)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+
+        while (await timer.WaitForNextTickAsync(ct))
+        {
+            _ = await GetIdleTimeAsync(ct);
+        }
     }
 
     private static ulong GetHidIdleTimeNanoseconds()

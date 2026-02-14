@@ -9,7 +9,7 @@ namespace JiggleSharp.Linux;
 
 public class LinuxPlatformServices : IPlatformServices
 {
-    public IIdleTimeProvider IdleTimeProvider => new MutterIdleTimeProvider();
-    public IInputInjector InputInjector => new YdotoolInputInjector();
-    public IEnvironmentValidator EnvironmentValidator => new LinuxEnvironmentValidator();
+    public IIdleTimeProvider IdleTimeProvider { get; } = new MutterIdleTimeProvider();
+    public IInputInjector InputInjector { get; } = new YdotoolInputInjector();
+    public IEnvironmentValidator EnvironmentValidator { get; } = new LinuxEnvironmentValidator();
 }
