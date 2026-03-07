@@ -3,6 +3,7 @@ namespace JiggleSharp.Core.Engine;
 public class JiggleOptions
 {
     // thresholds
+    public TimeSpan ActionTime { get; init; } = TimeSpan.FromSeconds(30);
     public long WarningLimitMs { get; init; } = 30_000;
     public long MinActionMs { get; init; } = 60_000;
     public long MaxActionMs { get; init; } = 120_000;
