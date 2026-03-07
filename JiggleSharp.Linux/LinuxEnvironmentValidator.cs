@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using JiggleSharp.Core.Hosting;
+using Serilog;
 
 namespace JiggleSharp.Linux;
 
@@ -32,7 +33,16 @@ public class LinuxEnvironmentValidator : IEnvironmentValidator
     /// </returns>
     public bool VerifyDependencies()
     {
-        return SystemctlProxy.YdotoolIsRunning(out _)
-               && SystemctlProxy.TryGetYtooldProxyPath(out _);
+        var ydotoolIsRunning = SystemctlProxy.YdotoolIsRunning(out var error);
+        var ydotoolProxyPath = SystemctlProxy.TryGetYtooldProxyPath(out var proxyPath);
+        
+        if (!ydotoolIsRunning)
+            Log.Error("ydotoold.service is not running or was not found. Verify the service is installed and running.");
+        
+        if (!ydotoolProxyPath)
+            Log.Error("Failed to parse ydotoold proxy path from service definition.");
+
+        return ydotoolIsRunning
+               && ydotoolProxyPath;
     }
 }
