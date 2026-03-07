@@ -1,5 +1,6 @@
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -36,8 +37,15 @@ public partial class App : Application
                 if (_platformServices != null)
                 {
                     desktop.Exit += async (_, __) => await _platformServices.IdleTimeProvider.StopAsync();
-                    
-                    _platformServices.IdleTimeProvider.Start();
+
+                    var Available = Task.Run(() => _platformServices.IdleTimeProvider.IsAvailableAsync())
+                        .GetAwaiter()
+                        .GetResult();
+
+                    if (Available)
+                        _platformServices?.IdleTimeProvider?.Start();
+                    else
+                        Console.Error.WriteLine("IdleTimeProvider is not available");
                 }
                 
                 desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
@@ -64,7 +72,8 @@ public partial class App : Application
                 return;
             }
             
-            _mainWindow = new MainWindow(_platformServices.IdleTimeProvider);
+            _mainWindow = new MainWindow(_platformServices?.IdleTimeProvider);
+            _mainWindow.WindowState = WindowState.Normal;
             _mainWindow.Closed += (_, _) =>
             {
                 _platformServices.SystemIntegrationHandler.HideWindowIndicator();
