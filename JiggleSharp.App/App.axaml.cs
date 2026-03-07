@@ -12,6 +12,7 @@ namespace JiggleSharp.App;
 public partial class App : Application
 {
     private IPlatformServices? _platformServices;
+    private JiggleEngine? _engine;
     private TrayIcon? _tray;
     private MainWindow? _mainWindow;
     
@@ -19,6 +20,9 @@ public partial class App : Application
     {
         AvaloniaXamlLoader.Load(this);
         _platformServices = PlatformServicesFactory.Create();
+        _engine = new JiggleEngine(_platformServices.SystemLog, 
+            _platformServices.IdleTimeProvider, 
+            _platformServices.InputInjector);
     }
 
     /// <summary>
@@ -36,14 +40,14 @@ public partial class App : Application
                 
                 if (_platformServices != null)
                 {
-                    desktop.Exit += async (_, __) => await _platformServices.IdleTimeProvider.StopAsync();
+                    desktop.Exit += async (_, __) => await _platformServices?.IdleTimeProvider.StopAsync()!;
 
-                    var Available = Task.Run(() => _platformServices.IdleTimeProvider.IsAvailableAsync())
+                    var available = Task.Run(() => _platformServices?.IdleTimeProvider.IsAvailableAsync())
                         .GetAwaiter()
                         .GetResult();
 
-                    if (Available)
-                        _platformServices?.IdleTimeProvider?.Start();
+                    if (available)
+                        _platformServices?.IdleTimeProvider.Start();
                     else
                         Console.Error.WriteLine("IdleTimeProvider is not available");
                 }
@@ -71,17 +75,16 @@ public partial class App : Application
                 _mainWindow.Activate();
                 return;
             }
-            
-            _mainWindow = new MainWindow(_platformServices?.IdleTimeProvider);
-            _mainWindow.WindowState = WindowState.Normal;
+
+            _mainWindow = new MainWindow(_platformServices?.IdleTimeProvider!);
             _mainWindow.Closed += (_, _) =>
             {
-                _platformServices.SystemIntegrationHandler.HideWindowIndicator();
+                _platformServices?.SystemIntegrationHandler.HideWindowIndicator();
                 _mainWindow = null;
             };
             _mainWindow.Show();
             
-            _platformServices.SystemIntegrationHandler.ShowWindowIndicator();
+            _platformServices?.SystemIntegrationHandler.ShowWindowIndicator();
         }
     }
     

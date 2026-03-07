@@ -6,8 +6,9 @@ namespace JiggleSharp.Core.Engine;
 
 public interface IPlatformServices
 {
-    IIdleTimeProvider? IdleTimeProvider { get; }
+    IIdleTimeProvider IdleTimeProvider { get; }
     IInputInjector InputInjector { get; }
     IEnvironmentValidator EnvironmentValidator { get; }
     ISystemIntegrationHandler SystemIntegrationHandler { get; }
+    ILogger SystemLog { get; }
 }

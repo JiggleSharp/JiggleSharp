@@ -5,6 +5,7 @@ using JiggleSharp.Core.Input;
 using JiggleSharp.Linux.Idle.KWin;
 using JiggleSharp.Linux.Idle.Mutter;
 using JiggleSharp.Linux.Input;
+using JiggleSharp.Linux.Logging;
 using JiggleSharp.Linux.System;
 
 namespace JiggleSharp.Linux;
@@ -49,6 +50,9 @@ public class LinuxPlatformServices : IPlatformServices
 
     /// <summary>Handles Linux-specific system integration (autostart, tray, etc.).</summary>
     public ISystemIntegrationHandler SystemIntegrationHandler { get; } = new LinuxSystemIntegrationHandler();
+
+    /// <summary>Handles Linux-specific logging.</summary>
+    public ILogger SystemLog { get; } = new LinuxSystemLog();
 
     // =========================================================================
     // Construction — idle provider selection

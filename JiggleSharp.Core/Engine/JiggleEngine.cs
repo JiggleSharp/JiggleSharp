@@ -1,242 +1,190 @@
-using System.Runtime.InteropServices.ComTypes;
+using System.Diagnostics;
+using JiggleSharp.Core.Input;
+using JiggleSharp.Core.Hosting;
+using JiggleSharp.Core.Idle;
 
 namespace JiggleSharp.Core.Engine;
 
 public sealed class JiggleEngine
 {
-    private readonly Idle.IIdleTimeProvider _idle;
-    private readonly Input.IInputInjector _input;
-    private readonly Input.IPathGenerator _path;
-    private readonly Hosting.IStateStore _state;
-    private readonly Hosting.ILogger _log;
-    private readonly JiggleOptions _opt;
-    private readonly Random _rng;
+    private readonly ILogger _logger;
+    private readonly IInputInjector _inputInjector;
+    private readonly IIdleTimeProvider _idleTimeProvider;
+    
+    // ========================================================================
+    // CONFIGURATION
+    // ========================================================================
+    private const string LogFile   = "/tmp/jigglemil.log";
+    private const string StateFile = "/tmp/jigglemil.state";
+    private const string PidFile   = "/tmp/jigglemil.pid";
 
-    private long _actionLimitMs;
+    private const long   WarningLimitMs  = 30_000;
+    private TimeSpan _actionTime = TimeSpan.FromSeconds(30);
+    private DateTime _lastAction = DateTime.Now;
+    private const long   MinActionMs     = 120_000;
+    private const long   MaxActionMs     = 180_000;
+    private const int    CheckIntervalMs = 1_000;
 
-    private EngineStatus _lastStatus = EngineStatus.Safe;
-    private string _lastEmoji = "🟢";
+    private const double MouseSpeedMin   = 5.0;
+    private const double MouseSpeedMax   = 15.0;
+    private const double GravityMin      = 5.0;
+    private const double GravityMax      = 10.0;
+    private const double WindMin         = 1.0;
+    private const double WindMax         = 5.0;
+    private const double TargetRadiusMin = 2.0;
+    private const double TargetRadiusMax = 5.0;
+    private const double MaxStepMin      = 5.0;
+    private const double MaxStepMax      = 15.0;
+    private const int    MaxPathPoints   = 1000;
+    private const int    MinDelayUs      = 2_000;
+    private const int    MaxDelayUs      = 3_500;
 
-    public JiggleEngine(
-        Idle.IIdleTimeProvider idleTimeProvider,
-        Input.IInputInjector inputInjector,
-        Input.IPathGenerator pathGenerator,
-        Hosting.IStateStore stateStore,
-        Hosting.ILogger logger,
-        JiggleOptions options,
-        Random random)
+    private TimeSpan _timeSinceLastMovement = TimeSpan.Zero;
+
+    public JiggleEngine(ILogger logger, IIdleTimeProvider idleTimeProvider, IInputInjector inputInjector)
     {
-        _idle = idleTimeProvider ?? throw new ArgumentNullException(nameof(idleTimeProvider));
-        _input = inputInjector ?? throw new ArgumentNullException(nameof(inputInjector));
-        _path = pathGenerator ?? throw new ArgumentNullException(nameof(pathGenerator));
-        _state = stateStore ?? throw new ArgumentNullException(nameof(stateStore));
-        _log = logger ?? throw new ArgumentNullException(nameof(logger));
-        _opt = options ?? throw new ArgumentNullException(nameof(options));
-        _rng = random ?? throw new ArgumentNullException(nameof(random));
-
-        ResetActionLimit();
+        _logger = logger;
+        _inputInjector = inputInjector;
+        _idleTimeProvider = idleTimeProvider;
+        
+        _idleTimeProvider.IdleTimeChanged += IdleTimeProviderOnIdleTimeChanged;
     }
 
-    /// <summary>
-    /// The currently scheduled action threshold (ms idle) at which we will jiggle.
-    /// </summary>
-    public long CurrentActionLimitMs => _actionLimitMs;
-
-    /// <summary>
-    /// One “tick” of the engine. Call this on a fixed interval (e.g., every 1s).
-    /// Returns a snapshot you can feed to a watch UI.
-    /// </summary>
-    public async Task<JiggleSnapshot> TickAsync(CancellationToken ct)
+    private void IdleTimeProviderOnIdleTimeChanged(object? sender, IdleTimeChangedEventArgs e)
     {
-        ct.ThrowIfCancellationRequested();
+        _timeSinceLastMovement = e.IdleTime;
 
-        TimeSpan idleTime;
-        try
+        if (_timeSinceLastMovement > _actionTime && 
+                DateTime.Now.Subtract(_lastAction) > _actionTime)
         {
-            idleTime = await _idle.GetIdleTimeAsync(ct);
-            if (idleTime.TotalMilliseconds < 0) idleTime = TimeSpan.FromMilliseconds(0);
+            _timeSinceLastMovement = TimeSpan.Zero;
+            _lastAction = DateTime.Now;
+            PerformWindMove();
         }
-        catch (OperationCanceledException) { throw; }
-        catch (Exception ex)
+    }
+
+    // ========================================================================
+    // STATE
+    // ========================================================================
+    private volatile bool _running = true;
+    private readonly bool          _smoothMode = true;
+
+    private readonly Random _rng = new();
+    
+    // ========================================================================
+    // WINDMOUSE PATH GENERATOR
+    // ========================================================================
+    private List<PathPoint> GenerateWindPath(double targetX, double targetY)
+    {
+        var path = new List<PathPoint>();
+
+        double mouseSpeed   = Randf(MouseSpeedMin,   MouseSpeedMax);
+        double gravity      = Randf(GravityMin,      GravityMax);
+        double wind         = Randf(WindMin,          WindMax);
+        double targetRadius = Randf(TargetRadiusMin, TargetRadiusMax);
+        double maxStep      = Randf(MaxStepMin,       MaxStepMax);
+
+        double x = 0, y = 0;
+        double vx = 0, vy = 0;
+        double wx = 0, wy = 0;
+
+        while (Hypot(targetX - x, targetY - y) > targetRadius
+               && path.Count < MaxPathPoints)
         {
-            // If idle query fails, treat as "not idle" (safe) but report error.
-            _log.Error("Idle time query failed.", ex);
-            idleTime = TimeSpan.FromMilliseconds(0);
+            double dist = Hypot(targetX - x, targetY - y);
+
+            wx = wx / Math.Sqrt(3.0) + Randf(-wind, wind) / Math.Sqrt(5.0);
+            wy = wy / Math.Sqrt(3.0) + Randf(-wind, wind) / Math.Sqrt(5.0);
+
+            if (dist > 0)
+            {
+                vx += (wx + (targetX - x) * gravity / dist) / mouseSpeed;
+                vy += (wy + (targetY - y) * gravity / dist) / mouseSpeed;
+            }
+
+            double vel = Hypot(vx, vy);
+            if (vel > maxStep)
+            {
+                vx = vx / vel * maxStep;
+                vy = vy / vel * maxStep;
+            }
+
+            int dx = (int)Math.Round(x + vx) - (int)Math.Round(x);
+            int dy = (int)Math.Round(y + vy) - (int)Math.Round(y);
+
+            x += vx;
+            y += vy;
+
+            if (dx != 0 || dy != 0)
+                path.Add(new PathPoint(dx, dy, (int)Randf(MinDelayUs, MaxDelayUs)));
         }
 
-        // Determine status based on thresholds
-        EngineStatus status;
-        string emoji;
-
-        if (idleTime.TotalMilliseconds >= _actionLimitMs)
-        {
-            status = EngineStatus.Acting;
-            emoji = "🟡";
-        }
-        else if (idleTime.TotalMilliseconds >= _opt.WarningLimitMs)
-        {
-            status = EngineStatus.Warning;
-            emoji = "🔴";
-        }
+        return path;
+    }
+    
+    // ========================================================================
+    // PATH EXECUTOR
+    // ========================================================================
+    private void ExecutePath(List<PathPoint> path)
+    {
+        if (_smoothMode)
+            ExecutePathSmooth(path);
         else
-        {
-            status = EngineStatus.Safe;
-            emoji = "🟢";
-        }
-
-        // Update state file only when it changes (reduces churn)
-        if (emoji != _lastEmoji)
-        {
-            _state.SetEmoji(emoji);
-            _lastEmoji = emoji;
-        }
-
-        // Optionally log status transitions
-        if (status != _lastStatus)
-        {
-            if (_opt.LogStatusTransitions)
-                _log.Info($"Status: {status} (idle {idleTime.Seconds}s, actionLimit {_actionLimitMs / 1000}s)");
-            _lastStatus = status;
-        }
-
-        // If time to act, do a jiggle
-        if (status == EngineStatus.Acting)
-        {
-            await PerformJiggleAsync(idleTime, ct).ConfigureAwait(false);
-            ResetActionLimit();
-
-            // After an action, we typically want to “settle” a bit (optional)
-            if (_opt.PostActionCooldownMs > 0)
-            {
-                try
-                {
-                    await Task.Delay(TimeSpan.FromMilliseconds(_opt.PostActionCooldownMs), ct).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException) { throw; }
-            }
-
-            // State returns to safe after action (matching your original behavior)
-            if ("🟢" != _lastEmoji)
-            {
-                _state.SetEmoji("🟢");
-                _lastEmoji = "🟢";
-            }
-
-            status = EngineStatus.Safe;
-            emoji = "🟢";
-        }
-
-        return new JiggleSnapshot(
-            TimestampUtc: DateTimeOffset.UtcNow,
-            Status: status,
-            Emoji: emoji,
-            IdleMs: idleTime,
-            WarningLimitMs: TimeSpan.FromMilliseconds(_opt.WarningLimitMs),
-            ActionLimitMs: TimeSpan.FromMilliseconds(_actionLimitMs),
-            Mode: _opt.Mode);
+            ExecutePathBatch(path);
     }
 
-    private async Task PerformJiggleAsync(TimeSpan idleMs, CancellationToken ct)
+    private void ExecutePathBatch(List<PathPoint> path)
     {
-        // Choose a random target point. We keep your “big box” approach.
-        // You can make this configurable later (radius, box size, etc.)
-        double targetX = RandF(_opt.TargetMinX, _opt.TargetMaxX);
-        double targetY = RandF(_opt.TargetMinY, _opt.TargetMaxY);
-
-        if (_opt.LogActions)
+        foreach (var p in path)
         {
-            _log.Info($"ACTION: idle {idleMs.TotalSeconds}s exceeded {_actionLimitMs / 1000}s. " +
-                      $"Target=({targetX:0},{targetY:0}). Mode={_opt.Mode}");
-        }
-
-        IReadOnlyList<Input.PathPoint> path;
-        try
-        {
-            path = _path.GeneratePath(targetX, targetY, _rng, _opt);
-        }
-        catch (Exception ex)
-        {
-            _log.Error("Path generation failed.", ex);
-            return;
-        }
-
-        if (path.Count == 0)
-        {
-            if (_opt.LogActions) _log.Info("ACTION: generated empty path; skipping.");
-            return;
-        }
-
-        // Execute path
-        try
-        {
-            if (_opt.Mode == JiggleMode.Batch)
-            {
-                // Batch: constant delay (ms) between steps, ignore per-point delays
-                foreach (var pt in path)
-                {
-                    ct.ThrowIfCancellationRequested();
-                    await _input.MoveMouseAsync(pt.Dx, pt.Dy, ct).ConfigureAwait(false);
-
-                    if (_opt.BatchStepDelayMs > 0)
-                        await Task.Delay(TimeSpan.FromMilliseconds(_opt.BatchStepDelayMs), ct).ConfigureAwait(false);
-                }
-            }
-            else // Smooth
-            {
-                foreach (var pt in path)
-                {
-                    ct.ThrowIfCancellationRequested();
-                    await _input.MoveMouseAsync(pt.Dx, pt.Dy, ct).ConfigureAwait(false);
-
-                    // If your generator already puts randomized delay values in each point,
-                    // we honor them here; otherwise you can choose a fixed smooth delay.
-                    int delayUs = pt.DelayUs > 0 ? pt.DelayUs : _opt.SmoothFallbackDelayUs;
-                    if (delayUs > 0)
-                        await DelayMicrosecondsAsync(delayUs, ct).ConfigureAwait(false);
-                }
-            }
-
-            if (_opt.LogActions)
-                _log.Info($"ACTION: executed {path.Count} points.");
-        }
-        catch (OperationCanceledException) { throw; }
-        catch (Exception ex)
-        {
-            _log.Error("Input injection failed during action.", ex);
+            if (!_running) break;
+            
+            Task.Run(() => _inputInjector.MoveMouseAsync(p.Dx, p.Dy, CancellationToken.None))
+                .GetAwaiter()
+                .GetResult();
+            
+            Thread.Sleep(5); // 5ms
         }
     }
 
-    private void ResetActionLimit()
+    private void ExecutePathSmooth(List<PathPoint> path)
     {
-        // actionLimit = random between MinAction and MaxAction
-        var min = _opt.MinActionMs;
-        var max = _opt.MaxActionMs;
-        if (min < 0) min = 0;
-        if (max < min) max = min;
+        foreach (var p in path)
+        {
+            if (!_running) break; 
+            
+            Task.Run(() => _inputInjector.MoveMouseAsync(p.Dx, p.Dy, CancellationToken.None))
+                .GetAwaiter()
+                .GetResult();
 
-        long next = (max == min)
-            ? min
-            : min + _rng.NextInt64(0, (max - min) + 1);
-
-        _actionLimitMs = next;
-
-        if (_opt.LogNextTrigger)
-            _log.Info($"Next trigger: {_actionLimitMs / 1000}s");
+            // Convert microseconds → milliseconds (minimum 1ms)
+            Thread.Sleep(Math.Max(1, p.DelayUs / 1000));
+        }
     }
 
-    private double RandF(double min, double max)
+    private void PerformWindMove()
     {
-        if (max < min) (min, max) = (max, min);
-        return min + _rng.NextDouble() * (max - min);
-    }
+        double tx = Randf(-400, 400);
+        double ty = Randf(-400, 400);
 
-    private static Task DelayMicrosecondsAsync(int microseconds, CancellationToken ct)
-    {
-        if (microseconds <= 0) return Task.CompletedTask;
+        _logger.Info($"    -> Target: ({tx:F0}, {ty:F0})");
 
-        // Good enough for “human-ish” mouse movement. Linux scheduling granularity varies.
-        // Convert to TimeSpan with fractional ms.
-        double ms = microseconds / 1000.0;
-        return Task.Delay(TimeSpan.FromMilliseconds(ms), ct);
+        var path = GenerateWindPath(tx, ty);
+        _logger.Info($"    -> Path: {path.Count} points");
+
+        ExecutePath(path);
     }
+    
+    
+    
+    // ========================================================================
+    // MATH HELPERS
+    // ========================================================================
+    private static double Hypot(double x, double y) => Math.Sqrt(x * x + y * y);
+
+    private double Randf(double min, double max) =>
+        min + _rng.NextDouble() * (max - min);
+
+    private long NextActionLimit() =>
+        MinActionMs + (long)(_rng.NextDouble() * (MaxActionMs - MinActionMs));
 }
