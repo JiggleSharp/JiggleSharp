@@ -10,5 +10,4 @@ public interface IPlatformServices
     IInputInjector InputInjector { get; }
     IEnvironmentValidator EnvironmentValidator { get; }
     ISystemIntegrationHandler SystemIntegrationHandler { get; }
-    ILogger SystemLog { get; }
 }

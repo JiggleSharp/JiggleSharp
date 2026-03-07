@@ -1,10 +1,25 @@
 using System.Diagnostics;
 using JiggleSharp.Core.Input;
+using Serilog;
 
 namespace JiggleSharp.Linux.Input;
 
 public class YdotoolInputInjector : IInputInjector
 {
+    private const string _ydotoolsocket = "/tmp/.ydotool_socket";
+    
+    public YdotoolInputInjector()
+    {
+        if (!SystemctlProxy.TryGetYtooldProxyPath(out var _ydotoolsocket))
+        {
+            Log.Error($"ydotoold service was not found. Please make sure it is installed and running.");
+        }
+        else
+        {
+            Log.Information($"ydotoold service found at {_ydotoolsocket}");
+        }
+    }
+    
     public Task MoveMouseAsync(int dx, int dy, CancellationToken ct)
     {
         try
@@ -18,7 +33,7 @@ public class YdotoolInputInjector : IInputInjector
                 CreateNoWindow         = true,
                 EnvironmentVariables =
                 {
-                    ["YDOTOOL_SOCKET"] = "/tmp/.ydotool_socket"
+                    ["YDOTOOL_SOCKET"] = _ydotoolsocket
                 }
             };
             proc.Start();

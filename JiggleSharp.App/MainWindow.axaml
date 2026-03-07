@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="640"
         x:Class="JiggleSharp.App.MainWindow"
+        xmlns:u="https://irihi.tech/ursa"
         Title="JiggleSharp.App"
         WindowState="Normal">
     <TextBlock Name="IdleTimeTextBlock" Text="Idle Time"/>
