@@ -9,6 +9,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
+using JiggleSharp.Core;
 using JiggleSharp.Core.Engine;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
@@ -41,6 +42,12 @@ public partial class App : Application
     // =========================================================================
 
     /// <summary>
+    /// The application configuration loaded either from the user's data or from
+    /// default values in the <see cref="ApplicationConfiguration"/> class.
+    /// </summary>
+    private ApplicationConfiguration _config = new();
+    
+    /// <summary>
     /// Platform-specific service implementations (input injector, idle
     /// provider, system integration, logger). Null only between object
     /// construction and <see cref="Initialize"/>.
@@ -64,7 +71,7 @@ public partial class App : Application
     /// and set back to null when the user closes it.
     /// </summary>
     private MainWindow? _mainWindow;
-
+    
     // =========================================================================
     // Avalonia application lifecycle
     // =========================================================================
@@ -80,13 +87,14 @@ public partial class App : Application
 
         _platformServices = PlatformServicesFactory.Create();
 
-        var config = LoadConfiguration();
+        _config = LoadConfiguration();
+        
 
         // TODO: remove once a proper settings UI exposes this field.
-        config.IdleTimeout = TimeSpan.FromSeconds(10);
+        _config.JigglerEngineOptions.IdleTimeout = TimeSpan.FromSeconds(10);
 
         _engine = new JiggleEngine(
-            config,
+            _config.JigglerEngineOptions,
             _platformServices.IdleTimeProvider,
             _platformServices.InputInjector);
     }
@@ -188,6 +196,13 @@ public partial class App : Application
             _platformServices.SystemIntegrationHandler.HideWindowIndicator();
             _mainWindow = null;
         };
+        _mainWindow.ConfigurationChanged += (sender, args) =>
+        {
+            Log.Information($"Configuration changed: {JsonSerializer.Serialize(args.NewConfiguration)}");
+            _config = args.NewConfiguration;
+            _tray?.Dispose();
+            BuildTrayIcon();
+        };
 
         _mainWindow.Show();
         _platformServices.SystemIntegrationHandler.ShowWindowIndicator();
@@ -213,7 +228,7 @@ public partial class App : Application
         _tray = new TrayIcon
         {
             ToolTipText = "JiggleSharp",
-            Icon        = WindowIconHelper.CreateEmojiIcon("🖱️"),
+            Icon        = WindowIconHelper.CreateEmojiIcon("🖱️", _config.TrayIconColor),
             Menu        = new NativeMenu
             {
                 Items =
@@ -258,7 +273,7 @@ public partial class App : Application
     /// file does not exist or cannot be deserialised, logging the error so
     /// the user can investigate a corrupt config without a crash.
     /// </summary>
-    private JiggleOptions LoadConfiguration()
+    private ApplicationConfiguration LoadConfiguration()
     {
         var filePath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
@@ -266,17 +281,17 @@ public partial class App : Application
             "config.json");
 
         if (!File.Exists(filePath))
-            return new JiggleOptions();
+            return new ApplicationConfiguration();
 
         try
         {
             var contents = File.ReadAllText(filePath);
-            return JsonSerializer.Deserialize<JiggleOptions>(contents) ?? new JiggleOptions();
+            return JsonSerializer.Deserialize<ApplicationConfiguration>(contents) ?? new ApplicationConfiguration();
         }
         catch (Exception ex)
         {
             Log.Error(ex, $"Failed to load configuration from {filePath}: {ex.Message}");
-            return new JiggleOptions();
+            return new ApplicationConfiguration();
         }
     }
 }

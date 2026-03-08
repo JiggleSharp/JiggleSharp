@@ -6,6 +6,11 @@
         x:Class="JiggleSharp.App.MainWindow"
         xmlns:u="https://irihi.tech/ursa"
         Title="JiggleSharp.App"
-        WindowState="Normal">
-    <TextBlock Name="IdleTimeTextBlock" Text="Idle Time"/>
+        WindowState="Normal"
+        MaxWidth="640"
+        MaxHeight="480">
+    <Panel>
+        <TextBlock Name="IdleTimeTextBlock" Text="Idle Time"/>
+        <Button Name="btnSaveConfig" Click="BtnSaveConfig_OnClick"/>
+    </Panel>
 </Window>
