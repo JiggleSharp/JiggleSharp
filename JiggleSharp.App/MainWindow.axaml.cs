@@ -3,6 +3,7 @@ using System.Drawing;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using JiggleSharp.App.ViewModels;
 using JiggleSharp.Core;
 using JiggleSharp.Core.Idle;
 
@@ -10,32 +11,20 @@ namespace JiggleSharp.App;
 
 public partial class MainWindow : Window
 {
-    private readonly IIdleTimeProvider _idleProvider;
-
-    public event EventHandler<ConfigurationChangedEventArgs>? ConfigurationChanged;
     
     public MainWindow(IIdleTimeProvider idleProvider)
     {
         InitializeComponent();
-        
-        _idleProvider = idleProvider;
-        _idleProvider.IdleTimeChanged += OnIdleTimeChanged;
     }
     
-    private void OnIdleTimeChanged(object? sender, IdleTimeChangedEventArgs e)
+    // Give the ViewModel a way to close the window without
+    // the VM needing a direct reference to the Window
+    protected override void OnDataContextChanged(EventArgs e)
     {
-        Dispatcher.UIThread.Post(() =>
+        base.OnDataContextChanged(e);
+        if (DataContext is SettingsViewModel vm)
         {
-            IdleTimeTextBlock.Text = e.IdleTime.ToString();
-        });
-    }
-
-    private void BtnSaveConfig_OnClick(object? sender, RoutedEventArgs e)
-    {
-        var config = new ApplicationConfiguration
-        {
-            TrayIconColor = Color.Red
-        };
-        ConfigurationChanged?.Invoke(this, new ConfigurationChangedEventArgs(config));
+            vm.CloseRequested += Close; // see below
+        }
     }
 }
