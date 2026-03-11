@@ -2,15 +2,158 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:JiggleSharp.App.ViewModels"
         mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="640"
         x:Class="JiggleSharp.App.MainWindow"
+        x:DataType="vm:SettingsViewModel"
         xmlns:u="https://irihi.tech/ursa"
         Title="JiggleSharp.App"
         WindowState="Normal"
         MaxWidth="640"
         MaxHeight="480">
-    <Panel>
-        <TextBlock Name="IdleTimeTextBlock" Text="Idle Time"/>
-        <Button Name="btnSaveConfig" Click="BtnSaveConfig_OnClick"/>
-    </Panel>
+    <Grid RowDefinitions="*,Auto">
+
+        <!-- Tab Body -->
+        <TabControl Grid.Row="0" Margin="12,12,12,0">
+
+            <!-- ── General Tab ── -->
+            <TabItem Header="General">
+                <ScrollViewer>
+                    <StackPanel Spacing="16" Margin="0,12,0,12">
+
+                        <!-- Tray Icon -->
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Tray Icon" FontWeight="SemiBold" />
+                            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto">
+                                <TextBox Grid.Column="0"
+                                         Text="{Binding TrayIcon}"
+                                         Watermark="Emoji or symbol" MaxLength="2" />
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Tray Icon Color -->
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Tray Icon Color" FontWeight="SemiBold" />
+                            <ColorPicker Color="{Binding TrayIconColor}"/>
+                        </StackPanel>
+
+                        <!-- Idle Timeout -->
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Idle Timeout" FontWeight="SemiBold" />
+                            <TextBlock Text="How long the system must be idle before jiggling starts."
+                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                       FontSize="12" TextWrapping="Wrap" />
+                            <TextBox Text="{Binding IdleTimeout}"
+                                     Watermark="hh:mm:ss" />
+                        </StackPanel>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ── Engine Tab ── -->
+            <TabItem Header="Engine">
+                <ScrollViewer>
+                    <StackPanel Spacing="20" Margin="0,12,0,12">
+
+                        <!-- Mouse Speed -->
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Mouse Speed" FontWeight="SemiBold" />
+                            <TextBlock FontSize="12"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                       Text="{Binding MouseSpeedLabel}" />
+                            <u:RangeSlider Minimum="0" Maximum="50"
+                                         LowerValue="{Binding MouseSpeedMinimum}"
+                                         UpperValue="{Binding MouseSpeedMaximum}" />
+                        </StackPanel>
+
+                        <!-- Gravity -->
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Gravity" FontWeight="SemiBold" />
+                            <TextBlock FontSize="12"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                       Text="{Binding GravityLabel}" />
+                            <u:RangeSlider Minimum="0" Maximum="50"
+                                         LowerValue="{Binding GravityMinimum}"
+                                         UpperValue="{Binding GravityMaximum}" />
+                        </StackPanel>
+
+                        <!-- Wind -->
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Wind" FontWeight="SemiBold" />
+                            <TextBlock FontSize="12"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                       Text="{Binding WindLabel}" />
+                            <u:RangeSlider Minimum="0" Maximum="50"
+                                         LowerValue="{Binding WindMinimum}"
+                                         UpperValue="{Binding WindMaximum}" />
+                        </StackPanel>
+
+                        <!-- Target Radius -->
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Target Radius" FontWeight="SemiBold" />
+                            <TextBlock FontSize="12"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                       Text="{Binding TargetRadiusLabel}" />
+                            <u:RangeSlider Minimum="0" Maximum="50"
+                                         LowerValue="{Binding TargetRadiusMinimum}"
+                                         UpperValue="{Binding TargetRadiusMaximum}" />
+                        </StackPanel>
+
+                        <!-- Velocity Max Step -->
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Velocity Max Step" FontWeight="SemiBold" />
+                            <TextBlock FontSize="12"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                       Text="{Binding VelocityMaxStepLabel}" />
+                            <u:RangeSlider Minimum="0" Maximum="50"
+                                         LowerValue="{Binding VelocityMaxStepMinimum}"
+                                         UpperValue="{Binding VelocityMaxStepMaximum}" />
+                        </StackPanel>
+
+                        <!-- Path Points Maximum -->
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Path Points Maximum" FontWeight="SemiBold" />
+                            <TextBlock FontSize="12"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                       Text="Maximum waypoints per movement path." />
+                            <NumericUpDown Value="{Binding PathPointsMaximum}"
+                                           Minimum="10" Maximum="10000"
+                                           Increment="100" />
+                        </StackPanel>
+
+                        <!-- Movement Delay -->
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Movement Delay (ms)" FontWeight="SemiBold" />
+                            <TextBlock FontSize="12"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                       Text="{Binding MovementDelayLabel}" />
+                            <u:RangeSlider Minimum="0" Maximum="10000"
+                                         LowerValue="{Binding MovementDelayMinimum}"
+                                         UpperValue="{Binding MovementDelayMaximum}" />
+                        </StackPanel>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+        </TabControl>
+
+        <!-- Footer -->
+        <Border Grid.Row="1"
+                Padding="12,10"
+                BorderThickness="0,1,0,0"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right"
+                        Spacing="8">
+                <Button Content="Cancel"
+                        Command="{Binding CancelCommand}" />
+                <Button Content="Save"
+                        Classes="accent"
+                        Command="{Binding SaveCommand}" />
+            </StackPanel>
+        </Border>
+
+    </Grid>
 </Window>

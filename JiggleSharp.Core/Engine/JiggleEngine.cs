@@ -62,10 +62,24 @@ public sealed class JiggleEngine
 
     /// <summary>Guards the event loop / path execution against a stopped engine.</summary>
     private volatile bool _running = true;
-
+    
     /// <summary>Shared RNG instance; not thread-safe but only accessed on the event callback thread.</summary>
     private readonly Random _rng = new();
+    
+    public async Task Stop()
+    {
+        _running = false;
+        await _idleTimeProvider.StopAsync();
+    }
 
+    public void Start()
+    {
+        _running = true;
+        _idleTimeProvider.Start();
+    }
+    
+    public bool IsRunning => _running;
+    
     // =========================================================================
     // Construction
     // =========================================================================
@@ -96,6 +110,8 @@ public sealed class JiggleEngine
     /// </summary>
     private void IdleTimeProviderOnIdleTimeChanged(object? sender, IdleTimeChangedEventArgs e)
     {
+        if (!_running) return;
+        
         _timeSinceLastMovement = e.IdleTime;
 
         bool idleLongEnough      = _timeSinceLastMovement > Configuration.IdleTimeout;

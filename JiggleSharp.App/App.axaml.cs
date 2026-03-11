@@ -1,6 +1,4 @@
 using System;
-using System.Buffers;
-using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -8,13 +6,14 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using Avalonia.Threading;
-using JiggleSharp.Core;
+using JiggleSharp.App.Helpers;
+using JiggleSharp.App.ViewModels;
 using JiggleSharp.Core.Engine;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using Serilog;
-using Ursa.Controls;
 
 namespace JiggleSharp.App;
 
@@ -23,30 +22,58 @@ namespace JiggleSharp.App;
 /// lifetime of the process: platform services, the jiggle engine, the system
 /// tray icon, and the optional main window.
 ///
-/// Startup sequence:
-///   1. <see cref="Initialize"/> — loads XAML resources, creates platform
-///      services, loads configuration, and constructs the engine.
-///   2. <see cref="OnFrameworkInitializationCompleted"/> — builds the tray
-///      icon, checks idle provider availability, starts monitoring, and
-///      configures explicit-shutdown mode so the app lives in the tray without
-///      a visible window.
+/// <para>Startup sequence:</para>
+/// <list type="number">
+///   <item>
+///     <see cref="Initialize"/> — loads XAML resources, creates platform
+///     services, loads configuration, and constructs the engine.
+///   </item>
+///   <item>
+///     <see cref="OnFrameworkInitializationCompleted"/> — builds the tray
+///     icon, checks idle provider availability, starts monitoring, and
+///     configures explicit-shutdown mode so the app lives in the tray without
+///     a visible window.
+///   </item>
+/// </list>
 ///
-/// The main window is created on demand when the user clicks "Open JiggleSharp"
-/// in the tray menu, and destroyed when closed — the app continues running in
+/// <para>
+/// The main window is created on demand when the user clicks "Settings…" in
+/// the tray menu, and destroyed when closed — the app continues running in
 /// the background.
+/// </para>
 /// </summary>
 public partial class App : Application
 {
+    // =========================================================================
+    // Constants
+    // =========================================================================
+
+    /// <summary>ARGB color of the status indicator when the engine is running.</summary>
+    private readonly Color _startedIndicatorColor = Color.FromArgb(255, 0, 255, 0);
+
+    /// <summary>ARGB color of the status indicator when the engine is stopped.</summary>
+    private readonly Color _stoppedIndicatorColor = Color.FromArgb(255, 139, 0, 0);
+
+    /// <summary>
+    /// Absolute path to the JSON configuration file.
+    /// Resolves to <c>~/.config/JiggleSharp/config.json</c> on Linux and
+    /// <c>%APPDATA%\JiggleSharp\config.json</c> on Windows.
+    /// </summary>
+    private readonly string _configFilePath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "JiggleSharp",
+        "config.json");
+
     // =========================================================================
     // Fields
     // =========================================================================
 
     /// <summary>
-    /// The application configuration loaded either from the user's data or from
-    /// default values in the <see cref="ApplicationConfiguration"/> class.
+    /// The active application configuration. Loaded from disk during
+    /// <see cref="Initialize"/>; replaced in full when the user saves settings.
     /// </summary>
     private ApplicationConfiguration _config = new();
-    
+
     /// <summary>
     /// Platform-specific service implementations (input injector, idle
     /// provider, system integration, logger). Null only between object
@@ -63,6 +90,7 @@ public partial class App : Application
     /// <summary>
     /// System tray icon. Created in <see cref="BuildTrayIcon"/> during
     /// framework initialization and lives for the duration of the process.
+    /// Disposed and rebuilt whenever the configuration changes.
     /// </summary>
     private TrayIcon? _tray;
 
@@ -71,9 +99,9 @@ public partial class App : Application
     /// and set back to null when the user closes it.
     /// </summary>
     private MainWindow? _mainWindow;
-    
+
     // =========================================================================
-    // Avalonia application lifecycle
+    // Avalonia Application Lifecycle
     // =========================================================================
 
     /// <summary>
@@ -86,12 +114,7 @@ public partial class App : Application
         AvaloniaXamlLoader.Load(this);
 
         _platformServices = PlatformServicesFactory.Create();
-
         _config = LoadConfiguration();
-        
-
-        // TODO: remove once a proper settings UI exposes this field.
-        _config.JigglerEngineOptions.IdleTimeout = TimeSpan.FromSeconds(10);
 
         _engine = new JiggleEngine(
             _config.JigglerEngineOptions,
@@ -103,19 +126,22 @@ public partial class App : Application
     /// Called by Avalonia once the framework is fully initialised and the
     /// application lifetime is available.
     ///
-    /// Hides the taskbar indicator, builds the tray icon, then checks whether
-    /// the idle provider is available on this system. If available, monitoring
-    /// is started; otherwise a warning is written to stderr.
+    /// <para>
+    /// Validates platform services and environment dependencies, hides the
+    /// taskbar indicator, builds the tray icon, then checks whether the idle
+    /// provider is available on this system. If available, monitoring is
+    /// started; otherwise a warning is written to stderr.
+    /// </para>
     ///
+    /// <para>
     /// Shutdown mode is set to <see cref="ShutdownMode.OnExplicitShutdown"/>
-    /// so closing the main window does not terminate the process — the app
-    /// continues running via the tray icon.
+    /// so closing the main window does not terminate the process.
+    /// </para>
     /// </summary>
     public override void OnFrameworkInitializationCompleted()
     {
         if (_platformServices is null)
         {
-            // Platform services could not be created; nothing useful can run.
             Log.Fatal("Failed to initialize platform services: null _platformServices object.");
             Environment.Exit(0);
             return;
@@ -137,10 +163,10 @@ public partial class App : Application
                 await Program.Host!.StopAsync();
                 Environment.Exit(1);
             });
-            
+
             return;
         }
-        
+
         _platformServices.SystemIntegrationHandler.HideWindowIndicator();
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -151,8 +177,8 @@ public partial class App : Application
             desktop.Exit += async (_, _) =>
                 await _platformServices.IdleTimeProvider.StopAsync();
 
-            // Availability check must be synchronous at this point; the
-            // framework has not yet entered the async event loop.
+            // Availability check must be synchronous here — the framework has
+            // not yet entered the async event loop.
             var available = Task.Run(() => _platformServices.IdleTimeProvider.IsAvailableAsync())
                 .GetAwaiter()
                 .GetResult();
@@ -170,20 +196,20 @@ public partial class App : Application
     }
 
     // =========================================================================
-    // Main window management
+    // Main Window Management
     // =========================================================================
 
     /// <summary>
     /// Shows the main window, creating it if it does not already exist.
     /// If the window is already open, brings it to the foreground instead.
-    /// Updates the taskbar indicator to reflect the open window.
+    /// Updates the taskbar indicator to reflect the open window state.
     /// </summary>
     private void CreateMainWindow()
     {
         if (_platformServices is null)
             return;
 
-        // If the window is already open, focus it rather than opening a second.
+        // If already open, focus rather than opening a second instance.
         if (_mainWindow is not null)
         {
             _mainWindow.Activate();
@@ -196,44 +222,63 @@ public partial class App : Application
             _platformServices.SystemIntegrationHandler.HideWindowIndicator();
             _mainWindow = null;
         };
-        _mainWindow.ConfigurationChanged += (sender, args) =>
-        {
-            Log.Information($"Configuration changed: {JsonSerializer.Serialize(args.NewConfiguration)}");
-            _config = args.NewConfiguration;
-            _tray?.Dispose();
-            BuildTrayIcon();
-        };
 
+        var vm = new SettingsViewModel(_config, newConfig =>
+        {
+            Log.Information("Configuration changed: {Config}", JsonSerializer.Serialize(newConfig));
+            _config = newConfig;
+            _engine?.Configuration = newConfig.JigglerEngineOptions;
+
+            // Rebuild the tray icon to reflect any icon/color changes.
+            _tray?.Dispose();
+            _mainWindow?.Close();
+            BuildTrayIcon();
+            SaveConfiguration();
+        });
+
+        _mainWindow.DataContext = vm;
         _mainWindow.Show();
         _platformServices.SystemIntegrationHandler.ShowWindowIndicator();
     }
 
     // =========================================================================
-    // Tray icon
+    // Tray Icon
     // =========================================================================
 
     /// <summary>
-    /// Constructs the system tray icon with a two-item menu:
-    ///   - "Open JiggleSharp" — shows the main window.
-    ///   - "Quit"             — terminates the process.
+    /// Constructs the system tray icon with the following menu items:
+    /// <list type="bullet">
+    ///   <item>"Stop/Start JiggleSharp" — toggles the jiggle engine.</item>
+    ///   <item>"Settings…"              — opens the main window.</item>
+    ///   <item>"Quit"                   — terminates the process.</item>
+    /// </list>
+    /// The icon reflects the current tray emoji, configured color, and
+    /// running/stopped indicator state.
     /// </summary>
     private Task BuildTrayIcon()
     {
-        var showWindowItem = new NativeMenuItem("Open JiggleSharp");
+        var toggleItem     = new NativeMenuItem("Stop JiggleSharp");
+        var settingsItem   = new NativeMenuItem("Settings...");
         var quitItem       = new NativeMenuItem("Quit");
 
-        showWindowItem.Click += ShowWindowMenuItem_Click;
-        quitItem.Click       += QuitMenuItem_Click;
+        toggleItem.Click   += ToggleJiggleSharp_Click;
+        settingsItem.Click += ShowWindowMenuItem_Click;
+        quitItem.Click     += QuitMenuItem_Click;
 
         _tray = new TrayIcon
         {
             ToolTipText = "JiggleSharp",
-            Icon        = WindowIconHelper.CreateEmojiIcon("🖱️", _config.TrayIconColor),
-            Menu        = new NativeMenu
+            Icon = WindowIconHelper.CreateEmojiIcon(
+                _config.TrayIcon,
+                _config.TrayIconColor,
+                _engine?.IsRunning == true ? _startedIndicatorColor : _stoppedIndicatorColor),
+            Menu = new NativeMenu
             {
                 Items =
                 {
-                    showWindowItem,
+                    toggleItem,
+                    new NativeMenuItemSeparator(),
+                    settingsItem,
                     new NativeMenuItemSeparator(),
                     quitItem
                 }
@@ -244,16 +289,41 @@ public partial class App : Application
     }
 
     // =========================================================================
-    // Tray menu event handlers
+    // Tray Menu Event Handlers
     // =========================================================================
 
-    /// <summary>Handles the "Open JiggleSharp" tray menu item.</summary>
+    /// <summary>Handles the "Settings…" tray menu item. Opens the main window.</summary>
     private void ShowWindowMenuItem_Click(object? sender, EventArgs e)
+        => CreateMainWindow();
+
+    /// <summary>
+    /// Handles the "Stop/Start JiggleSharp" tray menu item.
+    /// Toggles the engine and updates the tray icon indicator and menu label accordingly.
+    /// </summary>
+    private void ToggleJiggleSharp_Click(object? sender, EventArgs e)
     {
-        CreateMainWindow();
+        var menuItem = sender as NativeMenuItem;
+
+        if (_engine?.IsRunning == true)
+        {
+            _engine.Stop();
+            _tray!.Icon = WindowIconHelper.CreateEmojiIcon(
+                _config.TrayIcon, _config.TrayIconColor, _stoppedIndicatorColor);
+            if (menuItem is not null) menuItem.Header = "Start JiggleSharp";
+        }
+        else
+        {
+            _engine?.Start();
+            _tray!.Icon = WindowIconHelper.CreateEmojiIcon(
+                _config.TrayIcon, _config.TrayIconColor, _startedIndicatorColor);
+            if (menuItem is not null) menuItem.Header = "Stop JiggleSharp";
+        }
     }
 
-    /// <summary>Handles the "Quit" tray menu item.</summary>
+    /// <summary>
+    /// Handles the "Quit" tray menu item.
+    /// Flushes the Serilog sink and terminates the process.
+    /// </summary>
     private void QuitMenuItem_Click(object? sender, EventArgs e)
     {
         Log.CloseAndFlush();
@@ -265,33 +335,68 @@ public partial class App : Application
     // =========================================================================
 
     /// <summary>
-    /// Loads <see cref="JiggleOptions"/> from the user's application data
-    /// directory (<c>%APPDATA%/JiggleSharp/config.json</c> on Windows,
-    /// <c>~/.config/JiggleSharp/config.json</c> on Linux).
-    ///
-    /// Falls back to a default <see cref="JiggleOptions"/> instance if the
-    /// file does not exist or cannot be deserialised, logging the error so
-    /// the user can investigate a corrupt config without a crash.
+    /// Loads <see cref="ApplicationConfiguration"/> from the user's application
+    /// data directory. Falls back to a default instance if the file does not
+    /// exist or cannot be deserialised, logging the error so the user can
+    /// investigate a corrupt config without a crash.
     /// </summary>
+    /// <returns>
+    /// The deserialised configuration, or a new default
+    /// <see cref="ApplicationConfiguration"/> on failure.
+    /// </returns>
     private ApplicationConfiguration LoadConfiguration()
     {
-        var filePath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "JiggleSharp",
-            "config.json");
-
-        if (!File.Exists(filePath))
+        if (!File.Exists(_configFilePath))
             return new ApplicationConfiguration();
 
         try
         {
-            var contents = File.ReadAllText(filePath);
-            return JsonSerializer.Deserialize<ApplicationConfiguration>(contents) ?? new ApplicationConfiguration();
+            var contents = File.ReadAllText(_configFilePath);
+            var options  = BuildJsonOptions();
+            return JsonSerializer.Deserialize<ApplicationConfiguration>(contents, options)
+                   ?? new ApplicationConfiguration();
         }
         catch (Exception ex)
         {
-            Log.Error(ex, $"Failed to load configuration from {filePath}: {ex.Message}");
+            Log.Error(ex, "Failed to load configuration from {Path}: {Message}",
+                _configFilePath, ex.Message);
             return new ApplicationConfiguration();
         }
+    }
+
+    /// <summary>
+    /// Serialises the current <see cref="_config"/> and writes it to disk,
+    /// creating any missing directories in the path.
+    /// </summary>
+    /// <returns><c>true</c> on success.</returns>
+    /// <exception cref="Exception">Re-throws any I/O or serialisation exception after logging.</exception>
+    private bool SaveConfiguration()
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(_configFilePath)!);
+            var options  = BuildJsonOptions();
+            var contents = JsonSerializer.Serialize(_config, options);
+            File.WriteAllText(_configFilePath, contents);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to save configuration to {Path}: {Message}",
+                _configFilePath, ex.Message);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Builds the shared <see cref="JsonSerializerOptions"/> used for both
+    /// serialisation and deserialisation, including the
+    /// <see cref="AvaloniaColorJsonConverter"/>.
+    /// </summary>
+    private static JsonSerializerOptions BuildJsonOptions()
+    {
+        var options = new JsonSerializerOptions();
+        options.Converters.Add(new AvaloniaColorJsonConverter());
+        return options;
     }
 }

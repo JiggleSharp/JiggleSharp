@@ -144,12 +144,15 @@ public class KWinIdleTimeProvider : IIdleTimeProvider, IDisposable
     /// </summary>
     public async Task StopAsync()
     {
-        if (_cts == null)
-            return;
-
         await _cts.CancelAsync();
 
-        try { /* reserved for future awaitable teardown */ }
+        try
+        {
+            _timer.Stop();
+            _kwinMonitor.BecameIdle -= KwinMonitorOnBecameIdle;
+            _kwinMonitor.Resumed    -= KwinMonitorOnResumed;
+            _timer.Elapsed          -= TimerElapsed;
+        }
         catch (OperationCanceledException) { }
         finally
         {
