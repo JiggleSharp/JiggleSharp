@@ -4,8 +4,10 @@ namespace JiggleSharp.Mac;
 
 public class MacEnvironmentValidator : IEnvironmentValidator
 {
-    public bool VerifyDependencies()
+    public (bool success, string error) VerifyDependencies()
     {
-        return true; // Nothing needed currently to verify
+        return System.MacAccessibilityHelper.CheckAccessibility() 
+            ? (true, string.Empty) 
+            : (false, Constants.AccessibilityPermissionDeniedMessage);
     }
 }

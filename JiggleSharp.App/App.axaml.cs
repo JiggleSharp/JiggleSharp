@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia;
@@ -95,6 +96,13 @@ public partial class App : Application
     private TrayIcon? _tray;
 
     /// <summary>
+    /// Start/Stop JiggleSharp menu item. Created in <see cref="BuildTrayIcon"/> during
+    /// framework initialization and lives for the duration of the process.
+    /// Updated when the engine starts/stops to reflect it's running state.
+    /// </summary>
+    private NativeMenuItem? _toggleMenuItem;
+    
+    /// <summary>
     /// The main settings/status window. Null when hidden; created on demand
     /// and set back to null when the user closes it.
     /// </summary>
@@ -120,6 +128,65 @@ public partial class App : Application
             _config.JigglerEngineOptions,
             _platformServices.IdleTimeProvider,
             _platformServices.InputInjector);
+        
+        _engine.EngineStarted += EngineOnEngineStarted;
+        _engine.EngineStopped += EngineOnEngineStopped;
+        _platformServices.InputInjector.InputInjectorFailure += InputInjectorOnInputInjectorFailure;
+    }
+
+    /// <summary>
+    /// Executed whenever the <see cref="JiggleEngine"/> stops executing. This
+    /// can be stopped due to a <see cref="JiggleSharp.Core.Input.InputInjectorException"/>,
+    /// manually by the user using the <see cref="_toggleMenuItem"/>, or by a trigger object.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void EngineOnEngineStopped(object? sender, EventArgs e)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            _tray!.Icon = WindowIconHelper.CreateEmojiIcon(
+                _config.TrayIcon, _config.TrayIconColor, _stoppedIndicatorColor);
+            _toggleMenuItem?.Header = "Start JiggleSharp";
+        });
+    }
+
+    /// <summary>
+    /// Executed whenever the <see cref="JiggleEngine"/> starts executing. This
+    /// manually by the user using the <see cref="_toggleMenuItem"/> or by a trigger
+    /// object.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void EngineOnEngineStarted(object? sender, EventArgs e)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            _tray!.Icon = WindowIconHelper.CreateEmojiIcon(
+                _config.TrayIcon, _config.TrayIconColor, _startedIndicatorColor);
+            _toggleMenuItem?.Header = "Stop JiggleSharp";
+        });
+    }
+
+    /// <summary>
+    /// Triggered when the <see cref="JiggleSharp.Core.Input.IInputInjector"/>
+    /// encounters an error and is unable to move the mouse to a new position.
+    /// The exception is logged in Serilog and displayed in an alert to the user.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    private void InputInjectorOnInputInjectorFailure(object? sender, Exception e)
+    {
+        Dispatcher.UIThread.Invoke(() =>
+        {
+            var dialog = new MessageDialog(
+                "Mouse Movement Failure",
+                $"The mouse could not be moved due to an error:\n\n {e.Message}"
+                );
+            dialog.Show();
+        });
+        
+        _engine?.Stop();
     }
 
     /// <summary>
@@ -147,21 +214,18 @@ public partial class App : Application
             return;
         }
 
-        if (!_platformServices.EnvironmentValidator.VerifyDependencies())
+        var environmentValidationResults = _platformServices.EnvironmentValidator.VerifyDependencies();
+        if (!environmentValidationResults.success)
         {
-            Log.Fatal("Failed to initialize platform services: dependencies not running or not found.");
-            Dispatcher.UIThread.Post(async () =>
+            Log.Fatal($"Failed to initialize platform services: {environmentValidationResults.error}");
+            
+            // Show the user an error message about their environment
+            Dispatcher.UIThread.Post(() =>
             {
-                var box = MessageBoxManager.GetMessageBoxStandard(
-                    "Missing Dependencies",
-                    "One or more dependencies are not running or could not be found. Check the logs for more " +
-                    "information. The application will now exit.",
-                    ButtonEnum.Ok,
-                    Icon.Error);
-
-                await box.ShowAsync();
-                await Program.Host!.StopAsync();
-                Environment.Exit(1);
+                var message = new MessageDialog("Environment Validation Failed",
+                    "An error occurred while verifying your environment supports running JiggleSharp:\n\n" +
+                    $"{environmentValidationResults.error}");
+                message.Show();
             });
 
             return;
@@ -265,6 +329,9 @@ public partial class App : Application
         settingsItem.Click += ShowWindowMenuItem_Click;
         quitItem.Click     += QuitMenuItem_Click;
 
+        // Store for use by other methods later
+        _toggleMenuItem = toggleItem;
+        
         _tray = new TrayIcon
         {
             ToolTipText = "JiggleSharp",
@@ -302,21 +369,13 @@ public partial class App : Application
     /// </summary>
     private void ToggleJiggleSharp_Click(object? sender, EventArgs e)
     {
-        var menuItem = sender as NativeMenuItem;
-
         if (_engine?.IsRunning == true)
         {
-            _engine.Stop();
-            _tray!.Icon = WindowIconHelper.CreateEmojiIcon(
-                _config.TrayIcon, _config.TrayIconColor, _stoppedIndicatorColor);
-            if (menuItem is not null) menuItem.Header = "Start JiggleSharp";
+            _engine?.Stop();
         }
         else
         {
             _engine?.Start();
-            _tray!.Icon = WindowIconHelper.CreateEmojiIcon(
-                _config.TrayIcon, _config.TrayIconColor, _startedIndicatorColor);
-            if (menuItem is not null) menuItem.Header = "Stop JiggleSharp";
         }
     }
 
