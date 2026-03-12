@@ -31,18 +31,25 @@ public class LinuxEnvironmentValidator : IEnvironmentValidator
     /// <c>true</c> if <c>ydotoold</c> is running and its proxy path is
     /// resolvable; <c>false</c> otherwise.
     /// </returns>
-    public bool VerifyDependencies()
+    public (bool success, string error) VerifyDependencies()
     {
+        var errorMessage = new List<string>();
         var ydotoolIsRunning = SystemctlProxy.YdotoolIsRunning(out var error);
         var ydotoolProxyPath = SystemctlProxy.TryGetYtooldProxyPath(out var proxyPath);
-        
+
         if (!ydotoolIsRunning)
-            Log.Error("ydotoold.service is not running or was not found. Verify the service is installed and running.");
+            errorMessage.Add(Constants.YdotoolServiceNotRunningMessage);
+            
         
         if (!ydotoolProxyPath)
-            Log.Error("Failed to parse ydotoold proxy path from service definition.");
+            errorMessage.Add(Constants.YdotoolProxyNotDiscoveredMessage);
 
-        return ydotoolIsRunning
-               && ydotoolProxyPath;
+        var combinedMessages = String.Join(Environment.NewLine, errorMessage);
+        
+        if (errorMessage.Any())
+            Log.Error(combinedMessages);
+        
+        return (ydotoolIsRunning
+               && ydotoolProxyPath, combinedMessages);
     }
 }

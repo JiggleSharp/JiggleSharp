@@ -70,8 +70,13 @@ internal static class WindowIconHelper
                 new Typeface(GetEmojiFontName(), FontStyle.Normal, FontWeight.Black),
                 IconSize * EmojiFontSizeRatio,
                 emojiBrush);
+            var yPosition = 0.1;
 
-            ctx.DrawText(glyphText, new Point(0, 1.0 - (IconSize * EmojiFontSizeRatio)));
+            // Determine the y coordinate of the tray icon based on platform
+            if (OperatingSystem.IsMacOS() || OperatingSystem.IsWindows()) yPosition = 0;
+            if (OperatingSystem.IsLinux()) yPosition = 0.1;
+            
+            ctx.DrawText(glyphText, new Point(0, 1.0 - (IconSize * yPosition)));
 
             // Draw the status indicator dot in the bottom-right corner.
             ctx.DrawEllipse(indicatorFill, indicatorStroke, new Rect(44, 44, 20, 20));

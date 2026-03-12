@@ -29,6 +29,12 @@ namespace JiggleSharp.Core.Engine;
 public sealed class JiggleEngine
 {
     // =========================================================================
+    // Events
+    // =========================================================================
+    public event EventHandler EngineStopped;
+    public event EventHandler EngineStarted;
+    
+    // =========================================================================
     // Dependencies
     // =========================================================================
     private readonly IInputInjector    _inputInjector;
@@ -70,12 +76,14 @@ public sealed class JiggleEngine
     {
         _running = false;
         await _idleTimeProvider.StopAsync();
+        EngineStopped?.Invoke(this, EventArgs.Empty);
     }
 
     public void Start()
     {
         _running = true;
         _idleTimeProvider.Start();
+        EngineStarted?.Invoke(this, EventArgs.Empty);
     }
     
     public bool IsRunning => _running;

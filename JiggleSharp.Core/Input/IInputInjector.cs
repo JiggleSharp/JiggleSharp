@@ -6,4 +6,5 @@ namespace JiggleSharp.Core.Input;
 public interface IInputInjector
 {
     Task MoveMouseAsync(int dx, int dy, CancellationToken ct);
+    event EventHandler<Exception> InputInjectorFailure;
 }
