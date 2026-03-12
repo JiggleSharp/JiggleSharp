@@ -37,6 +37,7 @@
       <ProjectReference Include="..\JiggleSharp.Core\JiggleSharp.Core.csproj" />
       <ProjectReference Include="..\JiggleSharp.Linux\JiggleSharp.Linux.csproj" />
       <ProjectReference Include="..\JiggleSharp.Mac\JiggleSharp.Mac.csproj" />
+      <ProjectReference Include="..\JiggleSharp.Windows\JiggleSharp.Windows.csproj" />
     </ItemGroup>
 
     <ItemGroup>
