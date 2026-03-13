@@ -98,7 +98,7 @@ internal static class WindowIconHelper
     {
         if (OperatingSystem.IsMacOS())   return "Apple Color Emoji";
         if (OperatingSystem.IsLinux())   return "Noto Color Emoji";
-        if (OperatingSystem.IsWindows()) return "Segoe MDL2 Assets";
+        if (OperatingSystem.IsWindows()) return "Segoe Fluent Icons";
         return string.Empty;
     }
 

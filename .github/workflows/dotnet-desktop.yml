@@ -10,12 +10,18 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: windows-latest
+          - os: windows-latest-x64
             rid: win-x64
-            artifact: JiggleSharp-windows
-          - os: macos-latest
+            artifact: JiggleSharp-windows-x64
+          - os: windows-latest-arm64
+            rid: win-arm64
+            artifact: JiggleSharp-windows-arm64
+          - os: macos-latest-x64
+            rid: osx-x64
+            artifact: JiggleSharp-macos-x64
+          - os: macos-latest-arm64
             rid: osx-arm64
-            artifact: JiggleSharp-macos
+            artifact: JiggleSharp-macos-arm64
           - os: ubuntu-latest
             rid: linux-x64
             artifact: JiggleSharp-linux-x64
