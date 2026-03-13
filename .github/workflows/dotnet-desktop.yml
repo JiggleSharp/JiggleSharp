@@ -1,0 +1,54 @@
+name: Build and Publish
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+            artifact: JiggleSharp-windows
+          - os: macos-latest
+            rid: osx-arm64
+            artifact: JiggleSharp-macos
+          - os: ubuntu-latest
+            rid: linux-x64
+            artifact: JiggleSharp-linux-x64
+          - os: ubuntu-latest
+            rid: linux-arm64
+            artifact: JiggleSharp-linux-arm64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore JiggleSharp.sln
+
+      - name: Publish
+        run: >
+          dotnet publish JiggleSharp.App/JiggleSharp.App.csproj
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -o publish/${{ matrix.rid }}
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: publish/${{ matrix.rid }}
