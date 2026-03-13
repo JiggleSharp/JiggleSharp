@@ -177,14 +177,8 @@ public partial class App : Application
     /// <param name="e"></param>
     private void InputInjectorOnInputInjectorFailure(object? sender, Exception e)
     {
-        Dispatcher.UIThread.Invoke(() =>
-        {
-            var dialog = new MessageDialog(
-                "Mouse Movement Failure",
-                $"The mouse could not be moved due to an error:\n\n {e.Message}"
-                );
-            dialog.Show();
-        });
+        ShowAlertMessage("Mouse Movement Failure", 
+            $"The mouse could not be moved due to an error:\n\n {e.Message}");
         
         _engine?.Stop();
     }
@@ -220,13 +214,9 @@ public partial class App : Application
             Log.Fatal($"Failed to initialize platform services: {environmentValidationResults.error}");
             
             // Show the user an error message about their environment
-            Dispatcher.UIThread.Post(() =>
-            {
-                var message = new MessageDialog("Environment Validation Failed",
-                    "An error occurred while verifying your environment supports running JiggleSharp:\n\n" +
-                    $"{environmentValidationResults.error}");
-                message.Show();
-            });
+            ShowAlertMessage("Environment Validation Failed",
+                "An error occurred while verifying your environment supports running JiggleSharp:\n\n" +
+                $"{environmentValidationResults.error}");
 
             return;
         }
@@ -248,9 +238,16 @@ public partial class App : Application
                 .GetResult();
 
             if (available)
-                _platformServices.IdleTimeProvider.Start();
+            {
+                if (_config.StartEngineOnApplicationStart)
+                    _engine?.Start();
+            }
             else
-                Console.Error.WriteLine("IdleTimeProvider is not available on this system.");
+            {
+                Log.Fatal("IdleTimeProvider is not available on this system. The application will now exit.");
+                Log.CloseAndFlush();
+                Environment.Exit(1);
+            }
 
             // Keep the process alive after the main window is closed.
             desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
@@ -321,7 +318,7 @@ public partial class App : Application
     /// </summary>
     private Task BuildTrayIcon()
     {
-        var toggleItem     = new NativeMenuItem("Stop JiggleSharp");
+        var toggleItem     = new NativeMenuItem((_engine?.IsRunning == true ? "Stop" : "Start") + " JiggleSharp");
         var settingsItem   = new NativeMenuItem("Settings...");
         var quitItem       = new NativeMenuItem("Quit");
 
@@ -437,6 +434,36 @@ public partial class App : Application
             var options  = BuildJsonOptions();
             var contents = JsonSerializer.Serialize(_config, options);
             File.WriteAllText(_configFilePath, contents);
+
+            if (_config.StartJiggleSharpOnSystemStartup)
+            {
+                var result = _platformServices?.SystemIntegrationHandler.RegisterStartupApplication();
+
+                if (result == true)
+                    Log.Information("Registered JiggleSharp to start on system startup.");
+                else
+                {
+                    Log.Error("Failed to register JiggleSharp to start on system startup.");
+                    ShowAlertMessage("Startup Registration Failed", 
+                        "JiggleSharp could not be registered to start on system startup. " +
+                        "Check the logs for more information.");
+                }
+            }
+            else
+            {
+                var result = _platformServices?.SystemIntegrationHandler.DeregisterStartupApplication();
+
+                if (result == true)
+                    Log.Information("Deregistered JiggleSharp from system startup.");
+                else
+                {
+                    Log.Error("Failed to deregister JiggleSharp from system startup.");
+                    ShowAlertMessage("Startup Deregistration Failed", 
+                        "JiggleSharp could not be deregistered from system startup. " +
+                        "Check the logs for more information.");
+                }
+            }
+                
             return true;
         }
         catch (Exception ex)
@@ -457,5 +484,19 @@ public partial class App : Application
         var options = new JsonSerializerOptions();
         options.Converters.Add(new AvaloniaColorJsonConverter());
         return options;
+    }
+
+    /// <summary>
+    /// Displays a message dialog with the specified title and message on the UI thread.
+    /// </summary>
+    /// <param name="message">The content of the alert message to be displayed.</param>
+    /// <param name="title">The title of the alert dialog.</param>
+    private static void ShowAlertMessage(string message, string title)
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            var messageDialog = new MessageDialog(title, message);
+            messageDialog.Show();
+        });
     }
 }
