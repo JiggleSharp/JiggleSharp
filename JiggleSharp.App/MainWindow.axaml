@@ -20,7 +20,14 @@
             <TabItem Header="General">
                 <ScrollViewer>
                     <StackPanel Spacing="16" Margin="0,12,0,12">
-
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Startup Options" FontWeight="SemiBold"/>
+                            <CheckBox IsChecked="{Binding StartEngineOnStartup}" 
+                                      Content="Start Jiggle engine automatically when application starts" />
+                            <CheckBox IsChecked="{Binding StartOnSystemStartup}"
+                                      Content="Start JiggleSharp on system startup" />
+                        </StackPanel>
+                        
                         <!-- Tray Icon -->
                         <StackPanel Spacing="6">
                             <TextBlock Text="Tray Icon" FontWeight="SemiBold" />
@@ -38,15 +45,39 @@
                         </StackPanel>
 
                         <!-- Idle Timeout -->
-                        <StackPanel Spacing="6">
-                            <TextBlock Text="Idle Timeout" FontWeight="SemiBold" />
-                            <TextBlock Text="How long the system must be idle before jiggling starts."
-                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
-                                       FontSize="12" TextWrapping="Wrap" />
-                            <TextBox Text="{Binding IdleTimeout}"
-                                     Watermark="hh:mm:ss" />
-                        </StackPanel>
-
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto">
+                            <TextBlock 
+                                Grid.Column="0" 
+                                Grid.Row="0" 
+                                Grid.ColumnSpan="2" 
+                                Text="Idle Timeout" 
+                                FontWeight="SemiBold" />
+                            <TextBlock 
+                                Grid.Column="0" 
+                                Grid.Row="1" 
+                                Grid.ColumnSpan="2" 
+                                Text="How long the system must be idle before jiggling starts."
+                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                FontSize="12" TextWrapping="Wrap" />
+                            <Slider 
+                                Grid.Row="2" 
+                                Grid.Column="0" 
+                                Minimum="5"
+                                Maximum="1500"
+                                TickFrequency="1"
+                                IsSnapToTickEnabled="True"
+                                VerticalAlignment="Center"
+                                Margin="0,0,12,0"
+                                Value="{Binding IdleTimeout, Mode=TwoWay}" />
+                            <TextBlock 
+                                Grid.Row="2" 
+                                Grid.Column="1" 
+                                Text="{Binding IdleTimeout, 
+                                        Converter={StaticResource TimeSpanLabelConverter}}"
+                                HorizontalAlignment="Center"
+                                Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                                MinWidth="60" />
+                        </Grid>
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>

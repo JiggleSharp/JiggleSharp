@@ -3,6 +3,7 @@
              x:Class="JiggleSharp.App.App"
              xmlns:semi="https://irihi.tech/semi"
              xmlns:u-Semi="https://irihi.tech/ursa/themes/semi"
+             xmlns:converters="clr-namespace:JiggleSharp.App.Helpers"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
@@ -11,4 +12,7 @@
         <u-Semi:SemiTheme Locale="en-US"/>
         <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
     </Application.Styles>
+    <Application.Resources>
+        <converters:TimeSpanLabelConverter x:Key="TimeSpanLabelConverter"/>
+    </Application.Resources>
 </Application>

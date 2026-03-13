@@ -41,6 +41,16 @@ public partial class SettingsViewModel : ObservableObject
 
     #region General Properties
 
+    /// <summary>
+    /// Whether the engine should be started automatically when the application starts
+    /// </summary>
+    [ObservableProperty] private bool _startEngineOnStartup;
+    
+    /// <summary>
+    /// Whether the engine should be started automatically when the system starts up.
+    /// </summary>
+    [ObservableProperty] private bool _startOnSystemStartup;
+
     /// <summary>The emoji or symbol displayed as the system tray icon.</summary>
     [ObservableProperty] private string _trayIcon;
 
@@ -51,7 +61,7 @@ public partial class SettingsViewModel : ObservableObject
     /// The idle timeout duration as a string in <c>hh:mm:ss</c> format.
     /// Parsed to <see cref="TimeSpan"/> on save.
     /// </summary>
-    [ObservableProperty] private string _idleTimeout;
+    [ObservableProperty] private double _idleTimeout;
 
     #endregion
 
@@ -172,9 +182,11 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private void Save()
     {
+        _settings.StartEngineOnApplicationStart = StartEngineOnStartup;
+        _settings.StartJiggleSharpOnSystemStartup = StartOnSystemStartup;
         _settings.TrayIcon = TrayIcon;
         _settings.TrayIconColor = TrayIconColor;
-        _settings.JigglerEngineOptions.IdleTimeout = TimeSpan.Parse(IdleTimeout);
+        _settings.JigglerEngineOptions.IdleTimeout = TimeSpan.FromSeconds(IdleTimeout);
 
         var e = _settings.JigglerEngineOptions;
         e.MouseSpeedMinimum    = (int)MouseSpeedMinimum;
@@ -204,9 +216,11 @@ public partial class SettingsViewModel : ObservableObject
     /// </summary>
     private void LoadFromSettings()
     {
+        StartEngineOnStartup = _settings.StartEngineOnApplicationStart;
+        StartOnSystemStartup = _settings.StartJiggleSharpOnSystemStartup;
         TrayIcon      = _settings.TrayIcon;
         TrayIconColor = _settings.TrayIconColor;
-        IdleTimeout   = _settings.JigglerEngineOptions.IdleTimeout.ToString();
+        IdleTimeout   = _settings.JigglerEngineOptions.IdleTimeout.TotalSeconds;
 
         var e = _settings.JigglerEngineOptions;
         MouseSpeedMinimum      = e.MouseSpeedMinimum;

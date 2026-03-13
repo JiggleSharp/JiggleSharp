@@ -1,5 +1,6 @@
 using JiggleSharp.Core.Hosting;
 using System.Runtime.InteropServices;
+using Serilog;
 
 namespace JiggleSharp.Mac.System;
 
@@ -14,6 +15,10 @@ namespace JiggleSharp.Mac.System;
 /// </summary>
 public class MacSystemIntegrationHandler : ISystemIntegrationHandler
 {
+    private static string PlistPath =>
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+            "Library", "LaunchAgents", "com.jigglesharp.app.plist");
+    
     // =========================================================================
     // ISystemIntegrationHandler
     // =========================================================================
@@ -28,6 +33,54 @@ public class MacSystemIntegrationHandler : ISystemIntegrationHandler
     /// Shows the Dock icon by switching to the <c>Regular</c> activation policy.
     /// </summary>
     public void ShowWindowIndicator() => ShowDockIcon();
+
+    public bool RegisterStartupApplication()
+    {
+        try
+        {
+            if (File.Exists(PlistPath)) return true;
+            var plist = $"""
+                         <?xml version="1.0" encoding="UTF-8"?>
+                         <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+                             "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+                         <plist version="1.0">
+                         <dict>
+                             <key>Label</key>
+                             <string>com.jigglesharp.app</string>
+                             <key>ProgramArguments</key>
+                             <array>
+                                 <string>{Environment.ProcessPath}</string>
+                             </array>
+                             <key>RunAtLoad</key>
+                             <true/>
+                         </dict>
+                         </plist>
+                         """;
+            File.WriteAllText(PlistPath, plist);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "[MacSystemIntegrationHandler] Failed to register startup application");
+            return false;
+        }
+    }
+
+    public bool DeregisterStartupApplication()
+    {
+        try
+        {
+            if (!File.Exists(PlistPath)) return true;
+            
+            File.Delete(PlistPath);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "[MacSystemIntegrationHandler] Failed to deregister startup application");
+            return false;
+        }
+    }
 
     // =========================================================================
     // Public helpers

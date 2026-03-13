@@ -67,7 +67,7 @@ public sealed class JiggleEngine
     private readonly bool _smoothMode = true;
 
     /// <summary>Guards the event loop / path execution against a stopped engine.</summary>
-    private volatile bool _running = true;
+    private volatile bool _running;
     
     /// <summary>Shared RNG instance; not thread-safe but only accessed on the event callback thread.</summary>
     private readonly Random _rng = new();
