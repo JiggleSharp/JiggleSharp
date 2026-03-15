@@ -70,7 +70,7 @@ public partial class App : Application
     /// The active application configuration. Loaded from disk during
     /// <see cref="Initialize"/>; replaced in full when the user saves settings.
     /// </summary>
-    private ApplicationConfiguration _config = new();
+    private ApplicationConfiguration _config;
 
     /// <summary>
     /// Platform-specific service implementations (input injector, idle
@@ -398,20 +398,22 @@ public partial class App : Application
     private ApplicationConfiguration LoadConfiguration()
     {
         if (!File.Exists(_configFilePath))
-            return new ApplicationConfiguration();
+            return new ApplicationConfiguration(_platformServices?.SystemIntegrationHandler!);
 
         try
         {
             var contents = File.ReadAllText(_configFilePath);
             var options  = BuildJsonOptions();
-            return JsonSerializer.Deserialize<ApplicationConfiguration>(contents, options)
+            var deserializedConfiguration = JsonSerializer.Deserialize<ApplicationConfiguration>(contents, options)
                    ?? new ApplicationConfiguration();
+            deserializedConfiguration.SystemIntegrationHandler = _platformServices?.SystemIntegrationHandler!;
+            return deserializedConfiguration;
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Failed to load configuration from {Path}: {Message}",
                 _configFilePath, ex.Message);
-            return new ApplicationConfiguration();
+            return new ApplicationConfiguration(_platformServices?.SystemIntegrationHandler!);
         }
     }
 

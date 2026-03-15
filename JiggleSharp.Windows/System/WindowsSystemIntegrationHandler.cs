@@ -61,4 +61,13 @@ public class WindowsSystemIntegrationHandler : ISystemIntegrationHandler
             return false;
         }
     }
+
+    public bool IsStartupApplicationRegistered()
+    {
+        if (!OperatingSystem.IsWindows()) return false;
+        using var key = Registry.CurrentUser.OpenSubKey(
+            StartupRegistryKeyPath, writable: true);
+
+        return key == null;
+    }
 }

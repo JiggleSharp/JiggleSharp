@@ -59,4 +59,9 @@ public class LinuxSystemIntegrationHandler : ISystemIntegrationHandler
             return false;
         }
     }
+    
+    public bool IsStartupApplicationRegistered()
+    {
+        return File.Exists(DesktopPath);
+    }
 }

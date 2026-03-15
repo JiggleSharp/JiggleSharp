@@ -222,7 +222,7 @@ public partial class SettingsViewModel : ObservableObject
     private void LoadFromSettings()
     {
         StartEngineOnStartup = _settings.StartEngineOnApplicationStart;
-        StartOnSystemStartup = _settings.StartJiggleSharpOnSystemStartup;
+        StartOnSystemStartup = _settings.SystemIntegrationHandler?.IsStartupApplicationRegistered() ?? false;
         TrayIcon      = _settings.TrayIcon;
         TrayIconColor = _settings.TrayIconColor;
         IdleTimeout   = _settings.JigglerEngineOptions.IdleTimeout.TotalSeconds;

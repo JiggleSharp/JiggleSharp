@@ -6,4 +6,5 @@ public interface ISystemIntegrationHandler
     void ShowWindowIndicator();
     bool RegisterStartupApplication();
     bool DeregisterStartupApplication();
+    bool IsStartupApplicationRegistered();
 }
