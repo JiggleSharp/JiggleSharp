@@ -17,7 +17,7 @@ public class MacSystemIntegrationHandler : ISystemIntegrationHandler
 {
     private static string PlistPath =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            "Library", "LaunchAgents", "com.jigglesharp.app.plist");
+            "Library", "LaunchAgents", "com.jigglesharp.jigglesharp.plist");
     
     // =========================================================================
     // ISystemIntegrationHandler
@@ -53,6 +53,10 @@ public class MacSystemIntegrationHandler : ISystemIntegrationHandler
                              </array>
                              <key>RunAtLoad</key>
                              <true/>
+                             <key>AssociatedBundleIdentifiers</key>
+                             <array>
+                                 <string>com.jigglesharp.jigglesharp</string>
+                             </array>
                          </dict>
                          </plist>
                          """;
