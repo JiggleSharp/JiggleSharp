@@ -79,14 +79,15 @@ jobs:
             --team-id "${{ secrets.TEAM_ID }}" \
             --password "${{ secrets.NOTARY_TOOL_PASSWORD }}"
 
-      - name: Sign app bundle
+      - name: Sign app bundle 
         if: runner.os == 'macOS'
         run: |
           APP="publish/JiggleSharp.app"
           IDENTITY="Developer ID Application: Pronaio LLC (Y2M5JJC8K7)"
           find "$APP/Contents/MacOS" -type f | while read f; do
-            case "$f" in
-              *.pdb|*.dll|*.json|*.config|*.xml|*.txt|*.md)
+            ext="${f##*.}"
+            case "$ext" in
+              pdb|dll|json|config|xml|txt|md)
                 echo "Skipping $f"
                 ;;
               *)
