@@ -85,9 +85,13 @@ jobs:
           APP="publish/JiggleSharp.app"
           IDENTITY="Developer ID Application: Pronaio LLC (Y2M5JJC8K7)"
           find "$APP/Contents/MacOS" -type f | while read f; do
-            codesign --force --timestamp --options=runtime \
-              --entitlements JiggleSharp/Resources/macOS/JiggleSharp.entitlements \
-              --sign "$IDENTITY" "$f"
+            # Only sign Mach-O binaries and dylibs, skip everything else
+            if file "$f" | grep -qE "Mach-O|dynamically linked shared library"; then
+              echo "Signing $f"
+              codesign --force --timestamp --options=runtime \
+                --entitlements JiggleSharp/Resources/macOS/JiggleSharp.entitlements \
+                --sign "$IDENTITY" "$f"
+            fi
           done
           codesign --force --timestamp --options=runtime \
             --entitlements JiggleSharp/Resources/macOS/JiggleSharp.entitlements \
