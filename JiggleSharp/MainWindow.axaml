@@ -168,6 +168,15 @@
                 </ScrollViewer>
             </TabItem>
 
+            <!-- ── About Tab ── -->
+            <TabItem Header="About">
+                <ScrollViewer>
+                    <StackPanel>
+                        <TextBlock Padding="6" TextAlignment="Center" FontStyle="Oblique">JiggleSharp <Run Text="{Binding ApplicationVersion}"></Run></TextBlock>
+                        <TextBlock Padding="6" TextAlignment="Center" FontStyle="Italic">Copyright 2026 milacoder-dev</TextBlock>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
         </TabControl>
 
         <!-- Footer -->

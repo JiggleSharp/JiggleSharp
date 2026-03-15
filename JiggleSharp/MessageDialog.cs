@@ -28,7 +28,8 @@ public class MessageDialog : UrsaWindow
             Text       = title,
             FontSize   = 16,
             FontWeight = FontWeight.Bold,
-            Margin     = new Thickness(0, 0, 0, 4)
+            Margin     = new Thickness(0, 0, 0, 4),
+            TextWrapping = TextWrapping.Wrap
         });
         
         stack.Children.Add(new TextBlock

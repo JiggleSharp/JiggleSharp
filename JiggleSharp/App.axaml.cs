@@ -174,8 +174,7 @@ public partial class App : Application
     /// <param name="e"></param>
     private void InputInjectorOnInputInjectorFailure(object? sender, Exception e)
     {
-        ShowAlertMessage("Mouse Movement Failure", 
-            $"The mouse could not be moved due to an error:\n\n {e.Message}");
+        ShowAlertMessage($"The mouse could not be moved due to an error:\n\n {e.Message}", "Mouse Movement Failure");
         
         _engine?.Stop();
     }
@@ -211,9 +210,8 @@ public partial class App : Application
             Log.Fatal($"Failed to initialize platform services: {environmentValidationResults.error}");
             
             // Show the user an error message about their environment
-            ShowAlertMessage("Environment Validation Failed",
-                "An error occurred while verifying your environment supports running JiggleSharp:\n\n" +
-                $"{environmentValidationResults.error}");
+            ShowAlertMessage("An error occurred while verifying your environment supports running JiggleSharp:\n\n" +
+                             $"{environmentValidationResults.error}", "Environment Validation Failed");
 
             return;
         }
@@ -441,9 +439,8 @@ public partial class App : Application
                 else
                 {
                     Log.Error("Failed to register JiggleSharp to start on system startup.");
-                    ShowAlertMessage("Startup Registration Failed", 
-                        "JiggleSharp could not be registered to start on system startup. " +
-                        "Check the logs for more information.");
+                    ShowAlertMessage("JiggleSharp could not be registered to start on system startup. " +
+                        "Check the logs for more information.", "Startup Registration Failed");
                 }
             }
             else
@@ -455,9 +452,8 @@ public partial class App : Application
                 else
                 {
                     Log.Error("Failed to deregister JiggleSharp from system startup.");
-                    ShowAlertMessage("Startup Deregistration Failed", 
-                        "JiggleSharp could not be deregistered from system startup. " +
-                        "Check the logs for more information.");
+                    ShowAlertMessage("JiggleSharp could not be deregistered from system startup. " +
+                                     "Check the logs for more information.", "Startup Deregistration Failed");
                 }
             }
                 

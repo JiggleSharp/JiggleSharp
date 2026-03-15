@@ -60,9 +60,8 @@ internal class Program
         {
             InitializeLogging();
 
-            Host = Microsoft.Extensions.Hosting.Host
-                .CreateDefaultBuilder(args)
-                .UseSerilog() // replaces the default MEL providers with Serilog
+            Host = new HostBuilder()
+                .UseSerilog()
                 .Build();
 
             BuildAvaloniaApp()
@@ -101,7 +100,7 @@ internal class Program
             "JiggleSharp", "logs", "jigglesharp.log");
 
         Console.WriteLine($"Logging to {logPath}");
-
+        
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Debug()
             .WriteTo.Console()

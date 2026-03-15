@@ -46,7 +46,7 @@ public class MacSystemIntegrationHandler : ISystemIntegrationHandler
                          <plist version="1.0">
                          <dict>
                              <key>Label</key>
-                             <string>com.jigglesharp.app</string>
+                             <string>com.jigglesharp.jigglesharp</string>
                              <key>ProgramArguments</key>
                              <array>
                                  <string>{Environment.ProcessPath}</string>

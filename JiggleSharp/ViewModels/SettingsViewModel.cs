@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -155,6 +156,10 @@ public partial class SettingsViewModel : ObservableObject
     /// <summary>Human-readable label for the movement delay range.</summary>
     public string MovementDelayLabel   => $"{MovementDelayMinimum:0} – {MovementDelayMaximum:0} ms";
 
+    #endregion
+    
+    #region About Labels
+    public string ApplicationVersion => Assembly.GetEntryAssembly()?.GetName()?.Version?.ToString() ?? string.Empty;
     #endregion
 
     #region Events

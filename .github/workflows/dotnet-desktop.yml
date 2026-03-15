@@ -1,5 +1,4 @@
 name: Build and Publish
-
 on:
   push:
     branches:
@@ -45,7 +44,7 @@ jobs:
 
       - name: Publish
         run: >
-          dotnet publish JiggleSharp.App/JiggleSharp.App.csproj
+          dotnet publish JiggleSharp/JiggleSharp.csproj
           -c Release
           -r ${{ matrix.rid }}
           --self-contained true
@@ -53,7 +52,74 @@ jobs:
           -p:IncludeNativeLibrariesForSelfExtract=true
           -o publish/${{ matrix.rid }}
 
-      - name: Upload Artifact
+      - name: Build macOS app bundle
+        if: runner.os == 'macOS'
+        run: |
+          APP="publish/JiggleSharp.app"
+          mkdir -p "$APP/Contents/MacOS"
+          mkdir -p "$APP/Contents/Resources"
+          cp JiggleSharp/Resources/macOS/Info.plist "$APP/Contents/Info.plist"
+          cp JiggleSharp/Resources/macOS/Assets.car "$APP/Contents/Resources/Assets.car"
+          cp -a publish/${{ matrix.rid }}/. "$APP/Contents/MacOS/"
+          chmod +x "$APP/Contents/MacOS/JiggleSharp"
+
+      - name: Setup keychain and import certificate
+        if: runner.os == 'macOS'
+        run: |
+          security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          echo "${{ secrets.MACOS_CERTIFICATE }}" | base64 --decode > certificate.p12
+          security import certificate.p12 -k build.keychain \
+            -P "${{ secrets.MACOS_CERTIFICATE_PWD }}" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
+          xcrun notarytool store-credentials "JiggleSharp" \
+            --apple-id "${{ secrets.APPLE_ID }}" \
+            --team-id "${{ secrets.TEAM_ID }}" \
+            --password "${{ secrets.NOTARY_TOOL_PASSWORD }}"
+
+      - name: Sign app bundle
+        if: runner.os == 'macOS'
+        run: |
+          APP="publish/JiggleSharp.app"
+          IDENTITY="Developer ID Application: Pronaio LLC (Y2M5JJC8K7)"
+          find "$APP/Contents/MacOS" -type f | while read f; do
+            codesign --force --timestamp --options=runtime \
+              --entitlements JiggleSharp/Resources/macOS/JiggleSharp.entitlements \
+              --sign "$IDENTITY" "$f"
+          done
+          codesign --force --timestamp --options=runtime \
+            --entitlements JiggleSharp/Resources/macOS/JiggleSharp.entitlements \
+            --sign "$IDENTITY" "$APP"
+
+      - name: Notarize app
+        if: runner.os == 'macOS'
+        run: |
+          APP="publish/JiggleSharp.app"
+          ditto -c -k --sequesterRsrc --keepParent "$APP" publish/JiggleSharp-notarize.zip
+          xcrun notarytool submit publish/JiggleSharp-notarize.zip \
+            --keychain-profile "JiggleSharp" \
+            --wait
+          xcrun stapler staple "$APP"
+          rm publish/JiggleSharp-notarize.zip
+
+      - name: Zip macOS app
+        if: runner.os == 'macOS'
+        run: |
+          cd publish
+          ditto -c -k --sequesterRsrc --keepParent \
+            JiggleSharp.app ${{ matrix.artifact }}.zip
+
+      - name: Upload Artifact (macOS)
+        if: runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: publish/${{ matrix.artifact }}.zip
+
+      - name: Upload Artifact (non-macOS)
+        if: runner.os != 'macOS'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
