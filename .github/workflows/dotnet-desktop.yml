@@ -84,20 +84,24 @@ jobs:
         run: |
           APP="publish/JiggleSharp.app"
           IDENTITY="Developer ID Application: Pronaio LLC (Y2M5JJC8K7)"
+          
+          # Remove files that can't be signed
+          find "$APP/Contents/MacOS" -type f \( \
+            -name "*.pdb" -o \
+            -name "*.dll" -o \
+            -name "*.json" -o \
+            -name "*.xml" -o \
+            -name "*.config" \
+          \) -delete
+
+          # Sign remaining files
           find "$APP/Contents/MacOS" -type f | while read f; do
-            ext="${f##*.}"
-            case "$ext" in
-              pdb|dll|json|config|xml|txt|md)
-                echo "Skipping $f"
-                ;;
-              *)
-                echo "Signing $f"
-                codesign --force --timestamp --options=runtime \
-                  --entitlements JiggleSharp/Resources/macOS/JiggleSharp.entitlements \
-                  --sign "$IDENTITY" "$f" || true
-                ;;
-            esac
+            echo "Signing $f"
+            codesign --force --timestamp --options=runtime \
+              --entitlements JiggleSharp/Resources/macOS/JiggleSharp.entitlements \
+              --sign "$IDENTITY" "$f" || true
           done
+
           codesign --force --timestamp --options=runtime \
             --entitlements JiggleSharp/Resources/macOS/JiggleSharp.entitlements \
             --sign "$IDENTITY" "$APP"
