@@ -48,7 +48,7 @@ public class MacSystemIntegrationHandler : ISystemIntegrationHandler
                              <key>Label</key>
                              <string>com.jigglesharp.jigglesharp</string>
                              <key>ProgramArguments</key>
-                             <array>
+                             <array> 
                                  <string>{Environment.ProcessPath}</string>
                              </array>
                              <key>RunAtLoad</key>
