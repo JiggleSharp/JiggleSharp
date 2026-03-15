@@ -1,17 +1,12 @@
 using System;
-using System.Drawing;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
-using Avalonia.Threading;
-using JiggleSharp.App.ViewModels;
-using JiggleSharp.Core;
 using JiggleSharp.Core.Idle;
+using JiggleSharp.ViewModels;
 
-namespace JiggleSharp.App;
+namespace JiggleSharp;
 
 public partial class MainWindow : Window
 {
-    
     public MainWindow(IIdleTimeProvider idleProvider)
     {
         InitializeComponent();

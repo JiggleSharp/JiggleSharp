@@ -1,10 +1,10 @@
-﻿using System;
+﻿using Avalonia;
+using System;
 using System.IO;
-using Avalonia;
 using Microsoft.Extensions.Hosting;
 using Serilog;
 
-namespace JiggleSharp.App;
+namespace JiggleSharp;
 
 /// <summary>
 /// Application entry point. Responsible for bootstrapping the host, logging,

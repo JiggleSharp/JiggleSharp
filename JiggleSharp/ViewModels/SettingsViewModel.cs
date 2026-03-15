@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using JiggleSharp.Core;
 
-namespace JiggleSharp.App.ViewModels;
+namespace JiggleSharp.ViewModels;
 
 /// <summary>
 /// ViewModel for the Settings window. Exposes bindable properties for all

@@ -1,7 +1,7 @@
 using Avalonia.Media;
 using JiggleSharp.Core.Engine;
 
-namespace JiggleSharp.App;
+namespace JiggleSharp;
 
 public class ApplicationConfiguration
 {

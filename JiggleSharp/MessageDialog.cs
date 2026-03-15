@@ -5,7 +5,7 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Ursa.Controls;
 
-namespace JiggleSharp.App;
+namespace JiggleSharp;
 
 // A simple reusable message dialog that inherits your app theme naturally
 public class MessageDialog : UrsaWindow

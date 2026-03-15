@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Avalonia.Media;
 
-namespace JiggleSharp.App.Helpers;
+namespace JiggleSharp.Helpers;
 
 /// <summary>
 /// Serialises and deserialises <see cref="Color"/> as a compact JSON object

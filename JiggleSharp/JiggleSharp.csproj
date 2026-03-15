@@ -3,18 +3,12 @@
         <OutputType>WinExe</OutputType>
         <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
-        <!--<ApplicationManifest>app.manifest</ApplicationManifest>-->
+        <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    </PropertyGroup>
-
-    <PropertyGroup>
-        <MacOSBundle>true</MacOSBundle>
-        <MacOSBundleInfoPlist>Info.plist</MacOSBundleInfoPlist>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Avalonia" Version="11.3.12"/>
-        <PackageReference Include="Avalonia.Controls.ColorPicker" Version="11.3.12" />
         <PackageReference Include="Avalonia.Desktop" Version="11.3.12"/>
         <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.12"/>
         <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.12"/>
@@ -39,25 +33,4 @@
       <ProjectReference Include="..\JiggleSharp.Mac\JiggleSharp.Mac.csproj" />
       <ProjectReference Include="..\JiggleSharp.Windows\JiggleSharp.Windows.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Dotnet.Bundle" Version="*" />
-    </ItemGroup>
-
-    <PropertyGroup>
-        <UseAppHost>true</UseAppHost>
-    </PropertyGroup>
-
-    <PropertyGroup>
-        <!-- Required by Dotnet.Bundle -->
-        <CFBundleShortVersionString>1.0.0</CFBundleShortVersionString>
-        <CFBundleVersion>1</CFBundleVersion>
-
-        <!-- Nice to have / usually required by macOS tooling -->
-        <CFBundleIdentifier>com.milacoder.jigglesharp</CFBundleIdentifier>
-        <CFBundleName>JiggleSharp</CFBundleName>
-
-        <!-- Make it a menu bar utility: no Dock icon, no bouncing -->
-        <LSUIElement>true</LSUIElement>
-    </PropertyGroup>
 </Project>

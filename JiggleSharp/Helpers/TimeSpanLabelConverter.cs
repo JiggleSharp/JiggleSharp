@@ -3,7 +3,7 @@ using System.Globalization;
 using Avalonia.Data;
 using Avalonia.Data.Converters;
 
-namespace JiggleSharp.App.Helpers;
+namespace JiggleSharp.Helpers;
 
 public class TimeSpanLabelConverter : IValueConverter
 {

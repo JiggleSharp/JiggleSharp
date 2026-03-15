@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia;
@@ -9,14 +8,12 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Threading;
-using JiggleSharp.App.Helpers;
-using JiggleSharp.App.ViewModels;
 using JiggleSharp.Core.Engine;
-using MsBox.Avalonia;
-using MsBox.Avalonia.Enums;
+using JiggleSharp.Helpers;
+using JiggleSharp.ViewModels;
 using Serilog;
 
-namespace JiggleSharp.App;
+namespace JiggleSharp;
 
 /// <summary>
 /// Avalonia application entry point. Owns the top-level object graph for the

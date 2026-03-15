@@ -6,9 +6,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JiggleSharp.Linux", "Jiggle
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JiggleSharp.Mac", "JiggleSharp.Mac\JiggleSharp.Mac.csproj", "{BE16F8C2-623D-42DD-9FDB-E74A2148563E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JiggleSharp.App", "JiggleSharp.App\JiggleSharp.App.csproj", "{E721B283-0F65-4630-90FC-D06E966A7C2F}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JiggleSharp.Windows", "JiggleSharp.Windows\JiggleSharp.Windows.csproj", "{AB29AF0D-E234-4ED3-BC96-D478EE3F6A00}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JiggleSharp", "JiggleSharp\JiggleSharp.csproj", "{B2B8CA3E-72B1-438F-A5AE-FA246EA0CECF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,13 +28,13 @@ Global
 		{BE16F8C2-623D-42DD-9FDB-E74A2148563E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BE16F8C2-623D-42DD-9FDB-E74A2148563E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BE16F8C2-623D-42DD-9FDB-E74A2148563E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E721B283-0F65-4630-90FC-D06E966A7C2F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E721B283-0F65-4630-90FC-D06E966A7C2F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E721B283-0F65-4630-90FC-D06E966A7C2F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E721B283-0F65-4630-90FC-D06E966A7C2F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AB29AF0D-E234-4ED3-BC96-D478EE3F6A00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{AB29AF0D-E234-4ED3-BC96-D478EE3F6A00}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AB29AF0D-E234-4ED3-BC96-D478EE3F6A00}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AB29AF0D-E234-4ED3-BC96-D478EE3F6A00}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2B8CA3E-72B1-438F-A5AE-FA246EA0CECF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2B8CA3E-72B1-438F-A5AE-FA246EA0CECF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2B8CA3E-72B1-438F-A5AE-FA246EA0CECF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2B8CA3E-72B1-438F-A5AE-FA246EA0CECF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

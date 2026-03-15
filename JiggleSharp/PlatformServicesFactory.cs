@@ -4,7 +4,7 @@ using JiggleSharp.Linux;
 using JiggleSharp.Mac;
 using JiggleSharp.Windows;
 
-namespace JiggleSharp.App;
+namespace JiggleSharp;
 
 public static class PlatformServicesFactory
 {

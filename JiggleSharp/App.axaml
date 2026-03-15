@@ -1,9 +1,9 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="JiggleSharp.App.App"
+             x:Class="JiggleSharp.App"
              xmlns:semi="https://irihi.tech/semi"
              xmlns:u-Semi="https://irihi.tech/ursa/themes/semi"
-             xmlns:converters="clr-namespace:JiggleSharp.App.Helpers"
+             xmlns:converters="clr-namespace:JiggleSharp.Helpers"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
@@ -12,7 +12,7 @@
         <u-Semi:SemiTheme Locale="en-US"/>
         <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
     </Application.Styles>
-    <Application.Resources>
-        <converters:TimeSpanLabelConverter x:Key="TimeSpanLabelConverter"/>
-    </Application.Resources>
+     <Application.Resources>
+         <converters:TimeSpanLabelConverter x:Key="TimeSpanLabelConverter"/>
+     </Application.Resources>
 </Application>

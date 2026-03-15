@@ -5,7 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 
-namespace JiggleSharp.App;
+namespace JiggleSharp;
 
 /// <summary>
 /// Provides helpers for generating <see cref="WindowIcon"/> instances rendered
