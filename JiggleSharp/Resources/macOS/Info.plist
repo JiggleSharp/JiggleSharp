@@ -26,5 +26,7 @@
         <string>JiggleSharp-Icon</string>
         <key>NSAccessibilityUsageDescription</key>
         <string>JiggleSharp requires accessibility access to move the mouse cursor.</string>
+        <key>LSUIElement</key>
+        <true/>
     </dict>
 </plist>
