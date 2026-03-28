@@ -12,12 +12,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: 17
-          distribution: 'zulu' # Alternative distribution options are available.
+          distribution: 'zulu'
       - name: Cache SonarQube packages
         uses: actions/cache@v4
         with:
@@ -81,6 +81,32 @@ jobs:
       - name: Restore
         run: dotnet restore JiggleSharp.sln
 
+      - name: Install nuget-license
+        run: dotnet tool install --global nuget-license
+
+      - name: Generate third-party notices
+        shell: bash
+        run: |
+          nuget-license \
+            --input JiggleSharp.sln \
+            --include-transitive \
+            --output Markdown \
+            --file-output THIRD-PARTY-NOTICES.md \
+            --license-information-download-location licenses/
+
+      - name: Verify notices
+        shell: bash
+        run: |
+          if [ ! -s THIRD-PARTY-NOTICES.md ]; then
+            echo "ERROR: THIRD-PARTY-NOTICES.md is empty or missing"
+            exit 1
+          fi
+          if [ ! -d licenses ] || [ -z "$(ls -A licenses)" ]; then
+            echo "ERROR: License files directory is empty or missing"
+            exit 1
+          fi
+          echo "Notices OK ($(wc -l < THIRD-PARTY-NOTICES.md) lines, $(ls licenses/ | wc -l) license files)"
+
       - name: Publish
         run: >
           dotnet publish JiggleSharp/JiggleSharp.csproj
@@ -90,6 +116,13 @@ jobs:
           -p:PublishSingleFile=true
           -p:IncludeNativeLibrariesForSelfExtract=true
           -o publish/${{ matrix.rid }}
+
+      - name: Copy notices (non-macOS)
+        if: runner.os != 'macOS'
+        shell: bash
+        run: |
+          cp THIRD-PARTY-NOTICES.md publish/${{ matrix.rid }}/THIRD-PARTY-NOTICES.md
+          cp -r licenses/ publish/${{ matrix.rid }}/licenses/
 
       - name: Build macOS app bundle
         if: runner.os == 'macOS'
@@ -101,6 +134,8 @@ jobs:
           cp JiggleSharp/Resources/macOS/Assets.car "$APP/Contents/Resources/Assets.car"
           cp -a publish/${{ matrix.rid }}/. "$APP/Contents/MacOS/"
           chmod +x "$APP/Contents/MacOS/JiggleSharp"
+          cp THIRD-PARTY-NOTICES.md "$APP/Contents/Resources/THIRD-PARTY-NOTICES.md"
+          cp -r licenses/ "$APP/Contents/Resources/licenses/"
 
       - name: Setup keychain and import certificate
         if: runner.os == 'macOS'
@@ -118,12 +153,12 @@ jobs:
             --team-id "${{ secrets.TEAM_ID }}" \
             --password "${{ secrets.NOTARY_TOOL_PASSWORD }}"
 
-      - name: Sign app bundle 
+      - name: Sign app bundle
         if: runner.os == 'macOS'
         run: |
           APP="publish/JiggleSharp.app"
           IDENTITY="Developer ID Application: Pronaio LLC (Y2M5JJC8K7)"
-          
+
           # Remove files that can't be signed
           find "$APP/Contents/MacOS" -type f \( \
             -name "*.pdb" -o \

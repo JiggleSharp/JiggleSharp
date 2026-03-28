@@ -7,10 +7,10 @@
         x:Class="JiggleSharp.MainWindow"
         x:DataType="vm:SettingsViewModel"
         xmlns:u="https://irihi.tech/ursa"
+        xmlns:jiggleSharp="clr-namespace:JiggleSharp"
         Title="JiggleSharp.App"
         WindowState="Normal"
-        MaxWidth="640"
-        MaxHeight="480">
+        MaxWidth="640">
     <Grid RowDefinitions="*,Auto">
 
         <!-- Tab Body -->
@@ -170,12 +170,7 @@
 
             <!-- ── About Tab ── -->
             <TabItem Header="About">
-                <ScrollViewer>
-                    <StackPanel>
-                        <TextBlock Padding="6" TextAlignment="Center" FontStyle="Oblique">JiggleSharp <Run Text="{Binding ApplicationVersion}"></Run></TextBlock>
-                        <TextBlock Padding="6" TextAlignment="Center" FontStyle="Italic">Copyright 2026 milacoder-dev</TextBlock>
-                    </StackPanel>
-                </ScrollViewer>
+                <jiggleSharp:AboutPage />
             </TabItem>
         </TabControl>
 

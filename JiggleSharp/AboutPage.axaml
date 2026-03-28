@@ -1,0 +1,334 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:jiggleSharp="clr-namespace:JiggleSharp"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="JiggleSharp.AboutPage"
+             x:DataType="jiggleSharp:AboutPage">
+
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="AboutForeground"      Color="#1A1A1A"/>
+                    <SolidColorBrush x:Key="AboutSubtext"          Color="#777470"/>
+                    <SolidColorBrush x:Key="AboutCard"             Color="#EEEDF2"/>
+                    <SolidColorBrush x:Key="AboutBadgeBg"          Color="#E0DCF0"/>
+                    <SolidColorBrush x:Key="AboutDivider"          Color="#CCCAD4"/>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="AboutForeground"      Color="#F0EDE6"/>
+                    <SolidColorBrush x:Key="AboutSubtext"          Color="#6A6865"/>
+                    <SolidColorBrush x:Key="AboutCard"             Color="#1C1A28"/>
+                    <SolidColorBrush x:Key="AboutBadgeBg"          Color="#2A2440"/>
+                    <SolidColorBrush x:Key="AboutDivider"          Color="#3A3848"/>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
+    <DockPanel LastChildFill="True">
+
+        <!-- Logo pinned to bottom -->
+        <StackPanel DockPanel.Dock="Top">
+            <Lottie VerticalAlignment="Bottom"
+                    HorizontalAlignment="Center"
+                    Path="/Resources/Animations/miladev-logo.json"
+                    Margin="0 12"
+                    Name="MilaLogo" />
+            <!-- App identity -->
+            <TextBlock FontSize="22"
+                       FontWeight="Bold"
+                       TextAlignment="Center"
+                       Foreground="{DynamicResource AboutForeground}">
+                JiggleSharp <Run Text="{Binding ApplicationVersion}" Foreground="#B89EF5"/>
+            </TextBlock>
+            <TextBlock FontSize="12"
+                       TextAlignment="Center"
+                       Foreground="{DynamicResource AboutSubtext}"
+                       Margin="0,4,0,0"
+                       Text="Copyright © 2026 milacoder-dev"/>
+
+            <!-- Divider -->
+            <Rectangle Height="1"
+                       Fill="{DynamicResource AboutDivider}"
+                       Margin="0,16,0,16"
+                       Opacity="0.6"/>
+        </StackPanel>
+        
+        <!-- Scrollable content -->
+        <ScrollViewer DockPanel.Dock="Bottom"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled">
+            <StackPanel Margin="24,20,24,16" Spacing="0">
+
+                <!-- THIS SOFTWARE -->
+                <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="#B89EF5"
+                           LetterSpacing="2" Text="THIS SOFTWARE" Margin="0,0,0,6"/>
+                <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10" Margin="0,0,0,12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Grid.Column="0" Spacing="2">
+                            <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="JiggleSharp"/>
+                            <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="milacoder-dev"/>
+                        </StackPanel>
+                        <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                            <TextBlock FontSize="10" Foreground="#B89EF5" Text="MIT"/>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- AVALONIA TEAM -->
+                <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="#B89EF5"
+                           LetterSpacing="2" Text="AVALONIA TEAM" Margin="0,0,0,6"/>
+                <StackPanel Spacing="4" Margin="0,0,0,12">
+                    <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="Avalonia"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="v11.3.12 · Copyright 2013-2026 © The AvaloniaUI Project"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                                <TextBlock FontSize="10" Foreground="#B89EF5" Text="MIT"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="Avalonia.BuildServices"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="v11.3.2 · Copyright 2023-2025 © The AvaloniaUI Project"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                                <TextBlock FontSize="10" Foreground="#B89EF5" Text="MIT"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="Avalonia.Controls.ColorPicker"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="v11.3.12 · Copyright 2013-2026 © The AvaloniaUI Project"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                                <TextBlock FontSize="10" Foreground="#B89EF5" Text="MIT"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="Avalonia.Desktop"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="v11.3.12 · Copyright 2013-2026 © The AvaloniaUI Project"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                                <TextBlock FontSize="10" Foreground="#B89EF5" Text="MIT"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="Avalonia.Diagnostics"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="v11.3.12 · Copyright 2013-2026 © The AvaloniaUI Project"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                                <TextBlock FontSize="10" Foreground="#B89EF5" Text="MIT"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="Avalonia.Fonts.Inter"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="v11.3.12 · Copyright 2013-2026 © The AvaloniaUI Project"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                                <TextBlock FontSize="10" Foreground="#B89EF5" Text="MIT"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="Avalonia.Themes.Fluent"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="v11.3.12 · Copyright 2013-2026 © The AvaloniaUI Project"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                                <TextBlock FontSize="10" Foreground="#B89EF5" Text="MIT"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <!-- MICROSOFT -->
+                <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="#B89EF5"
+                           LetterSpacing="2" Text="MICROSOFT" Margin="0,0,0,6"/>
+                <StackPanel Spacing="4" Margin="0,0,0,12">
+                    <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="CommunityToolkit.Mvvm"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="v8.4.0 · © .NET Foundation and Contributors"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                                <TextBlock FontSize="10" Foreground="#B89EF5" Text="MIT"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="Microsoft.Extensions.DependencyInjection"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="v10.0.3 · © Microsoft Corporation"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                                <TextBlock FontSize="10" Foreground="#B89EF5" Text="MIT"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="Microsoft.Extensions.Hosting"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="v10.0.3 · © Microsoft Corporation"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                                <TextBlock FontSize="10" Foreground="#B89EF5" Text="MIT"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="Microsoft.Extensions.Logging"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="v10.0.3 · © Microsoft Corporation"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                                <TextBlock FontSize="10" Foreground="#B89EF5" Text="MIT"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <!-- IRIHI TECHNOLOGY -->
+                <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="#B89EF5"
+                           LetterSpacing="2" Text="IRIHI TECHNOLOGY" Margin="0,0,0,6"/>
+                <StackPanel Spacing="4" Margin="0,0,0,12">
+                    <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="Irihi.Ursa.Themes.Semi"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="v1.15.0 · IRIHI Technology Co., Ltd."/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                                <TextBlock FontSize="10" Foreground="#B89EF5" Text="MIT"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="Semi.Avalonia"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="v11.3.7.3 · IRIHI Technology Co., Ltd."/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                                <TextBlock FontSize="10" Foreground="#B89EF5" Text="MIT"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <!-- SERILOG CONTRIBUTORS -->
+                <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="#B89EF5"
+                           LetterSpacing="2" Text="SERILOG CONTRIBUTORS" Margin="0,0,0,6"/>
+                <StackPanel Spacing="4" Margin="0,0,0,12">
+                    <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="Serilog"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="v4.3.1 · Copyright © Serilog Contributors"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                                <TextBlock FontSize="10" Foreground="#8EC89A" Text="Apache 2.0"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="Serilog.Extensions.Hosting"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="v10.0.0 · Microsoft, Serilog Contributors"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                                <TextBlock FontSize="10" Foreground="#8EC89A" Text="Apache 2.0"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="Serilog.Sinks.Console"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="v6.1.1 · Serilog Contributors"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                                <TextBlock FontSize="10" Foreground="#8EC89A" Text="Apache 2.0"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="Serilog.Sinks.File"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="v7.0.0 · Serilog Contributors"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                                <TextBlock FontSize="10" Foreground="#8EC89A" Text="Apache 2.0"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+                <!-- OTHER -->
+                <TextBlock FontSize="11" FontWeight="SemiBold" Foreground="#B89EF5"
+                           LetterSpacing="2" Text="OTHER" Margin="0,0,0,6"/>
+                <StackPanel Spacing="4">
+                    <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="Lottie (Avalonia.Skia.Lottie)"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="v11.3.0.2 · Copyright © Wiesław Šoltés 2025"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                                <TextBlock FontSize="10" Foreground="#B89EF5" Text="MIT"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="MessageBox.Avalonia"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="v3.3.1.1 · Lary"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                                <TextBlock FontSize="10" Foreground="#B89EF5" Text="MIT"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <Border Background="{DynamicResource AboutCard}" CornerRadius="8" Padding="12,10">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="2">
+                                <TextBlock FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource AboutForeground}" Text="Tmds.DBus"/>
+                                <TextBlock FontSize="11" Foreground="{DynamicResource AboutSubtext}" Text="v0.90.3 · Tom Deseyn, Alp Toker"/>
+                            </StackPanel>
+                            <Border Grid.Column="1" Background="{DynamicResource AboutBadgeBg}" CornerRadius="4" Padding="6,3" VerticalAlignment="Center">
+                                <TextBlock FontSize="10" Foreground="#B89EF5" Text="MIT"/>
+                            </Border>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

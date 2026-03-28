@@ -6,7 +6,7 @@
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
         <UseAppHost>true</UseAppHost>
-        <AssemblyVersion>0.0.1.2</AssemblyVersion>
+        <AssemblyVersion>0.0.1.3</AssemblyVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -24,6 +24,7 @@
                           Condition="$([MSBuild]::IsOsPlatform('OSX'))" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
         <PackageReference Include="Irihi.Ursa.Themes.Semi" Version="1.15.0" />
+        <PackageReference Include="Lottie" Version="11.3.0.2" />
         <PackageReference Include="MessageBox.Avalonia" Version="3.3.1.1" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.3" />
         <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
@@ -43,5 +44,14 @@
       <Reference Include="Avalonia.Controls.ColorPicker">
         <HintPath>..\..\..\.nuget\packages\avalonia.controls.colorpicker\11.3.12\lib\net8.0\Avalonia.Controls.ColorPicker.dll</HintPath>
       </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Resources\Images\milacoder-dev-logo.svg" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Resources\Animations\miladev-logo.json" />
+      <AvaloniaResource Include="Resources\Animations\miladev-logo.json" />
     </ItemGroup>
 </Project>
