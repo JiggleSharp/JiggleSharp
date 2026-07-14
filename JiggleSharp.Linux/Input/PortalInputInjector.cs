@@ -90,9 +90,19 @@ public sealed class PortalInputInjector : IInputInjector, IDisposable
     public event EventHandler<Exception>? InputInjectorFailure;
 
     /// <summary>
+    /// Proactively establishes the RemoteDesktop portal session, triggering
+    /// the one-time consent dialog immediately (e.g. when the jiggle engine
+    /// starts) rather than waiting for the first <see cref="MoveMouseAsync"/>
+    /// call. Never throws: a denied or failed handshake is reported via
+    /// <see cref="InputInjectorFailure"/> instead. A no-op if the session is
+    /// already established.
+    /// </summary>
+    public Task RequestPermissionAsync(CancellationToken ct) => TryEnsureSessionReadyAsync(ct);
+
+    /// <summary>
     /// Moves the mouse by (<paramref name="dx"/>, <paramref name="dy"/>)
     /// pixels via the RemoteDesktop portal, establishing the portal session
-    /// first if this is the first call.
+    /// first if it hasn't been already (e.g. via <see cref="RequestPermissionAsync"/>).
     ///
     /// Never throws: failures (including a denied consent dialog) are
     /// reported via <see cref="InputInjectorFailure"/> instead, matching the
@@ -100,10 +110,11 @@ public sealed class PortalInputInjector : IInputInjector, IDisposable
     /// </summary>
     public async Task MoveMouseAsync(int dx, int dy, CancellationToken ct)
     {
+        if (!await TryEnsureSessionReadyAsync(ct).ConfigureAwait(false))
+            return; // failure already reported via InputInjectorFailure
+
         try
         {
-            await EnsureSessionReadyAsync(ct).ConfigureAwait(false);
-
             await _remoteDesktop!.NotifyPointerMotionAsync(
                 _sessionHandle!.Value,
                 new Dictionary<string, object>(),
@@ -115,6 +126,30 @@ public sealed class PortalInputInjector : IInputInjector, IDisposable
             var error = new InputInjectorException($"An error occurred while moving the mouse: {ex.Message}", ex);
             Log.Error(error.Message);
             InputInjectorFailure?.Invoke(this, error);
+        }
+    }
+
+    /// <summary>
+    /// Calls <see cref="EnsureSessionReadyAsync"/>, converting any failure
+    /// (including a denied consent dialog) into an <see cref="InputInjectorFailure"/>
+    /// notification rather than an exception. Shared by
+    /// <see cref="RequestPermissionAsync"/> and <see cref="MoveMouseAsync"/>.
+    /// </summary>
+    /// <returns><c>true</c> if the session is ready; <c>false</c> if it failed.</returns>
+    private async Task<bool> TryEnsureSessionReadyAsync(CancellationToken ct)
+    {
+        try
+        {
+            await EnsureSessionReadyAsync(ct).ConfigureAwait(false);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            var error = new InputInjectorException(
+                $"RemoteDesktop portal session could not be established: {ex.Message}", ex);
+            Log.Error(error.Message);
+            InputInjectorFailure?.Invoke(this, error);
+            return false;
         }
     }
 

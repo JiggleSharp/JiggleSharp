@@ -83,6 +83,14 @@ public sealed class JiggleEngine
     {
         _running = true;
         _idleTimeProvider.Start();
+
+        // Fire-and-forget: on platforms that need one-time OS consent to move
+        // the mouse (e.g. the Linux RemoteDesktop portal), this surfaces the
+        // permission prompt as soon as the engine starts rather than waiting
+        // for the first idle-triggered jiggle. No-op on platforms that don't
+        // need it.
+        _ = _inputInjector.RequestPermissionAsync(CancellationToken.None);
+
         EngineStarted?.Invoke(this, EventArgs.Empty);
     }
     
