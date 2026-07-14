@@ -1,6 +1,7 @@
-using System.Diagnostics;
 using JiggleSharp.Core.Hosting;
+using JiggleSharp.Linux.DBusInterfaces;
 using Serilog;
+using Tmds.DBus;
 
 namespace JiggleSharp.Linux;
 
@@ -9,47 +10,61 @@ namespace JiggleSharp.Linux;
 /// JiggleSharp are satisfied on the current machine.
 ///
 /// Currently checks:
-///   - The <c>ydotoold</c> daemon is running as a systemd service.
-///   - The socket/proxy path for <c>ydotoold</c> can be parsed from its
-///     service definition (required to open the ydotool connection).
+///   - The session is running under Wayland (required for the RemoteDesktop
+///     portal's input-injection backends).
+///   - The <c>org.freedesktop.portal.Desktop</c> service is reachable on the
+///     D-Bus session bus (i.e. xdg-desktop-portal is installed and running).
 /// </summary>
 public class LinuxEnvironmentValidator : IEnvironmentValidator
 {
+    private const string PortalBusName = "org.freedesktop.portal.Desktop";
+
     /// <summary>
     /// Checks that all Linux runtime dependencies are present and operational.
-    ///
-    /// Specifically, verifies via <see cref="SystemctlProxy"/> that:
-    ///   1. The <c>ydotoold</c> systemd service is currently running.
-    ///   2. The <c>ydotoold</c> proxy socket path can be successfully parsed
-    ///      from the service definition.
-    ///
-    /// Both conditions must be true for input simulation to function. If
-    /// either fails, the application should surface an actionable error to
-    /// the user (e.g. "run: systemctl --user enable --now ydotoold").
     /// </summary>
     /// <returns>
-    /// <c>true</c> if <c>ydotoold</c> is running and its proxy path is
-    /// resolvable; <c>false</c> otherwise.
+    /// <c>true</c> if the session is Wayland and the desktop portal service is
+    /// reachable; <c>false</c> otherwise, along with a combined error message.
     /// </returns>
     public (bool success, string error) VerifyDependencies()
     {
         var errorMessage = new List<string>();
-        var ydotoolIsRunning = SystemctlProxy.YdotoolIsRunning(out var error);
-        var ydotoolProxyPath = SystemctlProxy.TryGetYtooldProxyPath(out var proxyPath);
 
-        if (!ydotoolIsRunning)
-            errorMessage.Add(Constants.YdotoolServiceNotRunningMessage);
-            
-        
-        if (!ydotoolProxyPath)
-            errorMessage.Add(Constants.YdotoolProxyNotDiscoveredMessage);
+        var sessionType = Environment.GetEnvironmentVariable("XDG_SESSION_TYPE");
+        var isWayland = string.Equals(sessionType, "wayland", StringComparison.OrdinalIgnoreCase);
+        if (!isWayland)
+            errorMessage.Add(Constants.SessionTypeNotWaylandMessage);
 
-        var combinedMessages = String.Join(Environment.NewLine, errorMessage);
-        
+        var portalAvailable = Task.Run(IsPortalAvailableAsync).GetAwaiter().GetResult();
+        if (!portalAvailable)
+            errorMessage.Add(Constants.PortalServiceNotAvailableMessage);
+
+        var combinedMessages = string.Join(Environment.NewLine, errorMessage);
+
         if (errorMessage.Any())
             Log.Error(combinedMessages);
-        
-        return (ydotoolIsRunning
-               && ydotoolProxyPath, combinedMessages);
+
+        return (isWayland && portalAvailable, combinedMessages);
+    }
+
+    /// <summary>
+    /// Checks whether <c>org.freedesktop.portal.Desktop</c> currently has an
+    /// owner on the session bus, using a short-lived connection that is
+    /// closed immediately after the check.
+    /// </summary>
+    private static async Task<bool> IsPortalAvailableAsync()
+    {
+        try
+        {
+            using var connection = new Connection(Address.Session);
+            await connection.ConnectAsync().ConfigureAwait(false);
+
+            var dbus = connection.CreateProxy<IOrgFreedesktopDBus>("org.freedesktop.DBus", "/org/freedesktop/DBus");
+            return await dbus.NameHasOwnerAsync(PortalBusName).ConfigureAwait(false);
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

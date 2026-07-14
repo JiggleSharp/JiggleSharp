@@ -2,9 +2,11 @@ namespace JiggleSharp.Linux;
 
 public static class Constants
 {
-    public static string YdotoolServiceNotRunningMessage = 
-        "ydotoold.service is not running or was not found. Verify the service is installed and running.";
+    public static string SessionTypeNotWaylandMessage =
+        "JiggleSharp's Linux mouse movement requires a Wayland session. X11 sessions are not currently supported.";
 
-    public static string YdotoolProxyNotDiscoveredMessage =
-        "Failed to parse ydotoold proxy path from service definition.";
+    public static string PortalServiceNotAvailableMessage =
+        "The xdg-desktop-portal service (org.freedesktop.portal.Desktop) was not found on the D-Bus session bus. " +
+        "Please make sure xdg-desktop-portal and a RemoteDesktop backend (e.g. xdg-desktop-portal-gnome or " +
+        "xdg-desktop-portal-kde) are installed and running.";
 }
