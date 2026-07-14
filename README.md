@@ -38,8 +38,10 @@ Description=ydotool daemon
 Documentation=man:ydotoold(8)
 
 [Service]
-ExecStart=/usr/bin/ydotoold --socket-path=/tmp/.ydotool_socket
+Type=simple
+ExecStart=/usr/bin/ydotoold --socket-path=/tmp/.ydotool_socket --socket-perm=0666
 Restart=on-failure
+RestartSec=1
 
 [Install]
 WantedBy=multi-user.target
