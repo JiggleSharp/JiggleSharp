@@ -15,8 +15,8 @@ A cross-platform mouse jiggler that prevents your system from locking or marking
 
 | Platform | Idle Detection | Input Injection |
 |----------|---------------|-----------------|
-| Linux (Wayland + GNOME) | Mutter D-Bus (`org.gnome.Mutter.IdleMonitor`) | `ydotoold` |
-| Linux (Wayland + KDE) | KWin idle protocol | `ydotoold` |
+| Linux (Wayland + GNOME) | Mutter D-Bus (`org.gnome.Mutter.IdleMonitor`) | XDG Desktop Portal (`org.freedesktop.portal.RemoteDesktop`) |
+| Linux (Wayland + KDE) | KWin idle protocol | XDG Desktop Portal (`org.freedesktop.portal.RemoteDesktop`) |
 | macOS | Native APIs | Native APIs |
 | Windows | Native APIs | Native APIs |
 
@@ -27,35 +27,9 @@ A cross-platform mouse jiggler that prevents your system from locking or marking
 ### Linux
 
 - A **Wayland** session (GNOME or KDE Plasma).
-- [`ydotool`](https://github.com/ReimuNotMoe/ydotool) installed, with `ydotoold` running as a system-wide systemd service. The service definition must include a `--socket-path` argument — JiggleSharp reads this from the unit at startup to locate the socket.
+- [`xdg-desktop-portal`](https://github.com/flatpak/xdg-desktop-portal) with a RemoteDesktop-capable backend (e.g. `xdg-desktop-portal-gnome` or `xdg-desktop-portal-kde`) installed and running — these ship by default on GNOME and KDE Plasma, so most desktop installs need no extra setup.
 
-Some distributions (e.g. Fedora) do not ship a service unit for `ydotoold`. Create one manually:
-
-**`/etc/systemd/system/ydotoold.service`**
-```ini
-[Unit]
-Description=ydotool daemon
-Documentation=man:ydotoold(8)
-
-[Service]
-Type=simple
-ExecStart=/usr/bin/ydotoold --socket-path=/tmp/.ydotool_socket --socket-perm=0666
-Restart=on-failure
-RestartSec=1
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Then enable and start it:
-
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now ydotoold.service
-
-# Verify the service is running
-sudo systemctl status ydotoold.service
-```
+JiggleSharp talks to the portal's `org.freedesktop.portal.RemoteDesktop` interface directly over D-Bus — no separate daemon or process needs to be installed or started. The first time JiggleSharp moves the mouse, the desktop will show a one-time consent dialog asking to grant remote control access; this must be approved for mouse movement to work.
 
 ### macOS / Windows
 
@@ -109,7 +83,7 @@ JiggleSharp/
 │
 ├── JiggleSharp.Linux/      # Linux platform implementation
 │   ├── Idle/               # Mutter (GNOME) and KWin (KDE) idle providers via D-Bus
-│   ├── Input/              # ydotool-based mouse injection
+│   ├── Input/              # XDG Desktop Portal (RemoteDesktop) mouse injection via D-Bus
 │   └── System/             # Autostart / systemd integration
 │
 ├── JiggleSharp.Mac/        # macOS platform implementation

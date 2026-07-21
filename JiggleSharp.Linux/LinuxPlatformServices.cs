@@ -41,10 +41,10 @@ public class LinuxPlatformServices : IPlatformServices
     /// </summary>
     public IIdleTimeProvider? IdleTimeProvider { get; }
 
-    /// <summary>Injects input events via <c>ydotoold</c>.</summary>
-    public IInputInjector InputInjector { get; } = new YdotoolInputInjector();
+    /// <summary>Injects input events via the freedesktop.org RemoteDesktop portal.</summary>
+    public IInputInjector InputInjector { get; } = new PortalInputInjector();
 
-    /// <summary>Validates that <c>ydotoold</c> is running and reachable.</summary>
+    /// <summary>Validates that the session is Wayland and xdg-desktop-portal is reachable.</summary>
     public IEnvironmentValidator EnvironmentValidator { get; } = new LinuxEnvironmentValidator();
 
     /// <summary>Handles Linux-specific system integration (autostart, tray, etc.).</summary>

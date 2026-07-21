@@ -94,10 +94,19 @@ internal static class WindowIconHelper
     /// Falls back to an empty string on unrecognised platforms, which causes
     /// Avalonia to use the default system font.
     /// </summary>
+    /// <remarks>
+    /// Linux intentionally does *not* request "Noto Color Emoji" by name.
+    /// Skia's Linux/fontconfig font-manager backend (unlike CoreText on
+    /// macOS or DirectWrite on Windows) cannot paint COLR/COLRv1 color-layer
+    /// glyphs: the glyph resolves and is reported present, but nothing is
+    /// actually drawn, producing a blank tray icon. Leaving the family name
+    /// empty uses the default typeface instead, which causes Avalonia's
+    /// per-glyph font-fallback to substitute a font that can actually paint
+    /// the glyph outline (as a monochrome symbol rather than in color).
+    /// </remarks>
     private static string GetEmojiFontName()
     {
         if (OperatingSystem.IsMacOS())   return "Apple Color Emoji";
-        if (OperatingSystem.IsLinux())   return "Noto Color Emoji";
         if (OperatingSystem.IsWindows()) return "Segoe Fluent Icons";
         return string.Empty;
     }

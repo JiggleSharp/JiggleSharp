@@ -9,6 +9,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Threading;
 using JiggleSharp.Core.Engine;
+using JiggleSharp.Core.Input;
 using JiggleSharp.Helpers;
 using JiggleSharp.ViewModels;
 using Serilog;
@@ -222,9 +223,14 @@ public partial class App : Application
         {
             BuildTrayIcon();
 
-            // Stop the idle provider gracefully when the application exits.
+            // Stop the idle provider and release any input-injector resources
+            // (e.g. a RemoteDesktop portal session on Linux) gracefully when
+            // the application exits.
             desktop.Exit += async (_, _) =>
+            {
                 await _platformServices.IdleTimeProvider.StopAsync();
+                DisposeInputInjector();
+            };
 
             // Availability check must be synchronous here — the framework has
             // not yet entered the async event loop.
@@ -373,12 +379,26 @@ public partial class App : Application
 
     /// <summary>
     /// Handles the "Quit" tray menu item.
-    /// Flushes the Serilog sink and terminates the process.
+    /// Releases input-injector resources, flushes the Serilog sink, and
+    /// terminates the process. This bypasses <c>desktop.Exit</c>, so cleanup
+    /// is repeated here rather than relying on that event.
     /// </summary>
     private void QuitMenuItem_Click(object? sender, EventArgs e)
     {
+        DisposeInputInjector();
         Log.CloseAndFlush();
         Environment.Exit(0);
+    }
+
+    /// <summary>
+    /// Releases the current <see cref="IInputInjector"/> if it holds
+    /// disposable resources (e.g. a Linux RemoteDesktop portal session).
+    /// Safe to call multiple times.
+    /// </summary>
+    private void DisposeInputInjector()
+    {
+        if (_platformServices?.InputInjector is IDisposable disposableInjector)
+            disposableInjector.Dispose();
     }
 
     // =========================================================================
