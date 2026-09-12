@@ -10,6 +10,7 @@ using Avalonia.Media;
 using Avalonia.Threading;
 using JiggleSharp.Core.Engine;
 using JiggleSharp.Core.Input;
+using JiggleSharp.Core.Ipc;
 using JiggleSharp.Helpers;
 using JiggleSharp.ViewModels;
 using Serilog;
@@ -105,6 +106,14 @@ public partial class App : Application
     /// and set back to null when the user closes it.
     /// </summary>
     private MainWindow? _mainWindow;
+
+    /// <summary>
+    /// Named-pipe listener that lets another JiggleSharp process control this
+    /// instance's engine via <c>--start</c>, <c>--stop</c> and friends. Null if
+    /// the pipe could not be claimed, in which case the application runs
+    /// normally but cannot be remote-controlled.
+    /// </summary>
+    private IpcServer? _ipcServer;
 
     // =========================================================================
     // Avalonia Application Lifecycle
@@ -228,9 +237,12 @@ public partial class App : Application
             // the application exits.
             desktop.Exit += async (_, _) =>
             {
+                _ipcServer?.Dispose();
                 await _platformServices.IdleTimeProvider.StopAsync();
                 DisposeInputInjector();
             };
+
+            StartIpcServer();
 
             // Availability check must be synchronous here — the framework has
             // not yet entered the async event loop.
@@ -240,7 +252,10 @@ public partial class App : Application
 
             if (available)
             {
-                if (_config.StartEngineOnApplicationStart)
+                // Program.ForceEngineStart is set when this process was launched
+                // with --start or --toggle and found no instance to forward to;
+                // an explicit flag outranks the persisted setting.
+                if (_config.StartEngineOnApplicationStart || Program.ForceEngineStart)
                     _engine?.Start();
             }
             else
@@ -385,6 +400,7 @@ public partial class App : Application
     /// </summary>
     private void QuitMenuItem_Click(object? sender, EventArgs e)
     {
+        _ipcServer?.Dispose();
         DisposeInputInjector();
         Log.CloseAndFlush();
         Environment.Exit(0);
@@ -399,6 +415,109 @@ public partial class App : Application
     {
         if (_platformServices?.InputInjector is IDisposable disposableInjector)
             disposableInjector.Dispose();
+    }
+
+    // =========================================================================
+    // Inter-Process Control
+    // =========================================================================
+
+    /// <summary>
+    /// Claims the JiggleSharp named pipe and begins serving commands from other
+    /// JiggleSharp processes, so that <c>JiggleSharp --start</c> and friends can
+    /// drive this instance's engine.
+    ///
+    /// <para>
+    /// Failure is not fatal. <see cref="Program.HandleCommandLine"/> already
+    /// probed for a running instance before the UI was built, so the only way to
+    /// reach this point and lose the race is two launches landing in the same
+    /// few milliseconds. In that case this instance keeps running as an ordinary
+    /// tray app that simply cannot be remote-controlled.
+    /// </para>
+    /// </summary>
+    private void StartIpcServer()
+    {
+        if (IpcServer.TryStart(HandleIpcCommandAsync, out var server, out var error))
+        {
+            _ipcServer = server;
+            return;
+        }
+
+        Log.Warning(
+            "Command-line control is unavailable for this instance: {Error}", error);
+    }
+
+    /// <summary>
+    /// Executes one command received over the IPC pipe and reports the resulting
+    /// engine state.
+    ///
+    /// <para>
+    /// The pipe's accept loop runs on a thread-pool thread, so the work is
+    /// marshalled onto the UI thread before touching the engine. That makes a
+    /// remote command follow exactly the same path as a click on the tray menu,
+    /// keeping all engine state transitions on a single thread.
+    /// </para>
+    /// </summary>
+    /// <param name="command">A command constant from <see cref="IpcProtocol"/>.</param>
+    /// <returns>The response line to send back to the caller.</returns>
+    private Task<string> HandleIpcCommandAsync(string command)
+    {
+        var completion = new TaskCompletionSource<string>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+
+        Dispatcher.UIThread.Post(async () =>
+        {
+            try
+            {
+                completion.SetResult(await ApplyIpcCommandAsync(command));
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Failed to apply IPC command {Command}: {Message}", command, ex.Message);
+                completion.SetResult(IpcProtocol.Error(ex.Message));
+            }
+        });
+
+        return completion.Task;
+    }
+
+    /// <summary>
+    /// Applies an IPC command to the engine. Runs on the UI thread.
+    /// Start and stop are guarded by the current state so that a repeated
+    /// command is a genuine no-op rather than restarting the idle provider or
+    /// re-raising the engine's state-change events.
+    /// </summary>
+    private async Task<string> ApplyIpcCommandAsync(string command)
+    {
+        if (_engine is null)
+            return IpcProtocol.Error("the jiggle engine is not available");
+
+        switch (command.ToUpperInvariant())
+        {
+            case IpcProtocol.Start:
+                if (!_engine.IsRunning)
+                    _engine.Start();
+                break;
+
+            case IpcProtocol.Stop:
+                if (_engine.IsRunning)
+                    await _engine.Stop();
+                break;
+
+            case IpcProtocol.Toggle:
+                if (_engine.IsRunning)
+                    await _engine.Stop();
+                else
+                    _engine.Start();
+                break;
+
+            case IpcProtocol.Status:
+                break;
+
+            default:
+                return IpcProtocol.Error($"unknown command '{command}'");
+        }
+
+        return IpcProtocol.StateResponse(_engine.IsRunning);
     }
 
     // =========================================================================
